@@ -1,0 +1,48 @@
+
+
+rule target:
+    input:
+        "results/drought_survival.RDS"
+
+# this rule takes the files from data collectio and creates the set 
+# of files that will be used for the analysis
+
+rule data_wrangling:
+    input:
+        day_4="resources/day_4_areas.csv",
+        day_17="resources/day_17_areas.csv",
+        ids="resources/germ_and_id.csv",
+        height="resources/heights.csv",
+        drought="resources/seed_growth_vs_seed_size.csv"
+    output:
+        traits="results/wrangled/traits.csv",
+        long="results/wrangled/drought_long.csv",
+        short="results/wrangled/drought_short.csv"
+    log:
+        log="results/logs/data_wrangling.log"
+    conda:
+        "envs/wrangling.yaml"
+    script:
+        "scripts/data_wrangling.R"
+
+# run the stan code to fit the growth rate/survival model
+
+rule drought_survival:
+    input:
+        long="results/wrangled/drought_long.csv",
+        short="results/wrangled/drought_short.csv"
+    output:
+        fit="results/drought_survival.RDS"
+    log:
+        log="results/logs/drought_survival_model.log"
+    params:
+        stan="workflow/scripts/stan/drought_survival.stan"
+    conda:
+        "envs/cmdstanr.yaml"
+    script:
+        "scripts/drought_survival.R"
+
+rule post_pred_checks:
+    input:
+        fit="results/drought_survival.RDS"
+    output:
