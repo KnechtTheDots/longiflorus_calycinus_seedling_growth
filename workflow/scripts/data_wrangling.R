@@ -84,8 +84,15 @@ long <- seed_size %>%
   drop_na(seedling_area) %>% 
   mutate(day = as.numeric(gsub("day_","", day)),
          age = day - germ_day) %>% 
-  drop_na() %>% 
-  mutate(id = as.integer(factor(id)))
+  # since it is hared to measure them on the germ day, they are still unfolding,
+  # I am removing measurements from that day
+  filter(age > 0) %>% 
+  drop_na() %>%
+  # the last day for 1_22 must be measured wrong, need to go back and
+  # re-measure it, but for now remove it.
+  filter(id != "1_22") %>% 
+  mutate(id = as.integer(factor(id)),
+         id = factor(id, levels = 1:length(unique(id))))
 
 write.csv(long, snakemake@output[['long']], row.names = F, quote = F)
 
@@ -96,6 +103,7 @@ short <- long %>%
   filter(age == max(age)) %>% 
   # did they survive till day 4? (1,0)
   mutate(survive = death_day - 3) %>% 
+  arrange(id) %>% 
   select(id, seed_size, seedling_area, survive, age)
 
 write.csv(short, snakemake@output[['short']], row.names = F, quote = F)

@@ -8,15 +8,13 @@ sink(log, type = "message")
 long <- read.csv(snakemake@input[['long']])
 short <- read.csv(snakemake@input[['short']])
 
-long <- read.csv("results/wrangled/drought_long.csv")
-short <- read.csv("results/wrangled/drought_short.csv")
-
 print("Data read in!")
 
 # create a list of the data for stan
 dat <- list(
   n_long = nrow(long),
   n_short = nrow(short),
+  n_pred = 100,
   area = long$seedling_area,
   age = long$age,
   id_long = long$id,
@@ -24,7 +22,9 @@ dat <- list(
   id_short = short$id,
   final_size = short$seedling_area,
   seed = short$seed_size,
-  age_max = short$age
+  age_max = short$age,
+  size_pred = seq(-2,2.5,l = 100),
+  rgr_pred = seq(.125, .325, l = 100)
 )
 
 # compile the stan file into the executable 

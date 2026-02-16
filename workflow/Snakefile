@@ -2,7 +2,8 @@
 
 rule target:
     input:
-        "results/drought_survival.RDS"
+        expand("results/plots/post_pred_checks/{plot}.svg", plot=["pred_vs_obs", "dens", "sd", "mean", "min", "max"]),
+        expand("results/plots/rhat_{part}_ess.svg", part=["bulk", "tail"])
 
 # this rule takes the files from data collectio and creates the set 
 # of files that will be used for the analysis
@@ -44,5 +45,15 @@ rule drought_survival:
 
 rule post_pred_checks:
     input:
-        fit="results/drought_survival.RDS"
+        fit="results/drought_survival.RDS",
+        short="results/wrangled/drought_short.csv"
     output:
+        expand("results/plots/post_pred_checks/{plot}.svg", plot=["pred_vs_obs", "dens", "sd", "mean", "min", "max"]),
+        expand("results/plots/rhat_{part}_ess.svg", part=["bulk", "tail"])
+    log:
+        log="results/logs/post_pred_checks.log"
+    conda:
+        "envs/plots.yaml"
+    script:
+        "scripts/ppc_plots.R"
+    
