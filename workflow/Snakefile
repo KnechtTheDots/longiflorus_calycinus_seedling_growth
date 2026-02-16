@@ -3,7 +3,8 @@
 rule target:
     input:
         expand("results/plots/post_pred_checks/{plot}.svg", plot=["pred_vs_obs", "dens", "sd", "mean", "min", "max"]),
-        expand("results/plots/rhat_{part}_ess.svg", part=["bulk", "tail"])
+        expand("results/plots/rhat_{part}_ess.svg", part=["bulk", "tail"]),
+        expand("results/plots/survival/{plot}.svg", plot=["survival_vs_size", "survival_vs_rgr", "survival_vs_age_rgr"])
 
 # this rule takes the files from data collectio and creates the set 
 # of files that will be used for the analysis
@@ -56,4 +57,16 @@ rule post_pred_checks:
         "envs/plots.yaml"
     script:
         "scripts/ppc_plots.R"
-    
+
+rule survival_plots:
+    input:
+        fit="results/drought_survival.RDS",
+        short="results/wrangled/drought_short.csv"
+    output:
+        expand("results/plots/survival/{plot}.svg", plot=["survival_vs_size", "survival_vs_rgr", "survival_vs_age_rgr"])
+    log:
+        log="results/logs/survival_plots.log"
+    conda:
+        "envs/plots.yaml"
+    script:
+        "scripts/survival_plots.R"

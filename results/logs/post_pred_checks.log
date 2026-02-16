@@ -1,0 +1,59 @@
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+This is bayesplot version 1.15.0
+- Online documentation and vignettes at mc-stan.org/bayesplot
+- bayesplot theme set to bayesplot::theme_default()
+   * Does _not_ affect other ggplot2 plots
+   * See ?bayesplot_theme_set for details on theme setting
+This is posterior version 1.6.1
+
+Attaching package: ‘posterior’
+
+The following object is masked from ‘package:bayesplot’:
+
+    rhat
+
+The following objects are masked from ‘package:stats’:
+
+    mad, sd, var
+
+The following objects are masked from ‘package:base’:
+
+    %in%, match
+
+This is cmdstanr version 0.9.0
+- CmdStanR documentation and vignettes: mc-stan.org/cmdstanr
+- CmdStan path: /mnt/c/Users/jjk06/OneDrive/Desktop/2026_r_projs/longiflorus_calycinus_seedling_growth/.snakemake/conda/da3b87d43ae29e2a65d8c81aa9ad7041_/bin/cmdstan
+- CmdStan version: 2.38.0
+[1] "Packages read in"
+[1] "Data read in"
+Warning message:
+Dropping 'draws_df' class as required metadata was removed. 
+[1] "starting calcs"
+[1] "Data prediction plot made"
+`stat_bin()` using `bins = 30`. Pick better value `binwidth`.
+`stat_bin()` using `bins = 30`. Pick better value `binwidth`.
+Note: in most cases the default test statistic 'mean' is too weak to detect anything of interest.
+`stat_bin()` using `bins = 30`. Pick better value `binwidth`.
+`stat_bin()` using `bins = 30`. Pick better value `binwidth`.
+`stat_bin()` using `bins = 30`. Pick better value `binwidth`.
+`stat_bin()` using `bins = 30`. Pick better value `binwidth`.
+`stat_bin()` using `bins = 30`. Pick better value `binwidth`.
+`stat_bin()` using `bins = 30`. Pick better value `binwidth`.
+Warning message:
+Removed 2 rows containing missing values or values outside the scale range (`geom_point()`). 
+Warning message:
+Removed 2 rows containing missing values or values outside the scale range (`geom_point()`). 
+Warning message:
+Removed 2 rows containing missing values or values outside the scale range (`geom_point()`). 
+Warning message:
+Removed 2 rows containing missing values or values outside the scale range (`geom_point()`). 
