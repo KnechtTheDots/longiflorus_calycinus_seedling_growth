@@ -2,7 +2,8 @@
 
 rule target:
     input:
-        epi="results/plots/epi_test/eip.svg",
+        expand("results/plots/survival/{plot}.svg", plot=["survival_vs_size", "survival_vs_rgr", "survival_vs_age_rgr", "survival_vs_seed_rgr", "panel_plot"]),
+        epi="results/plots/epi_test/epi.svg",
         obs="results/plots/epi_test/obs.svg"
 # this rule takes the files from data collectio and creates the set 
 # of files that will be used for the analysis
@@ -61,7 +62,7 @@ rule survival_plots:
         fit="results/drought_survival.RDS",
         short="results/wrangled/drought_short.csv"
     output:
-        expand("results/plots/survival/{plot}.svg", plot=["survival_vs_size", "survival_vs_rgr", "survival_vs_age_rgr"])
+        expand("results/plots/survival/{plot}.svg", plot=["survival_vs_size", "survival_vs_rgr", "survival_vs_age_rgr", "survival_vs_seed_rgr", "panel_plot"])
     log:
         log="results/logs/survival_plots.log"
     conda:
@@ -94,7 +95,7 @@ rule epi_plots:
         height="results/trait_boots/height.csv",
         traits="results/wrangled/traits.csv"
     output:
-        epi="results/plots/epi_test/eip.svg",
+        epi="results/plots/epi_test/epi.svg",
         obs="results/plots/epi_test/obs.svg"
     log:
         log="results/logs/epi_plots.log"

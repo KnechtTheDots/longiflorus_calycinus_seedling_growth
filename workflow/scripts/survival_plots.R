@@ -6,7 +6,9 @@ sink(log, type = "message")
 
 library(ggplot2)
 library(dplyr)
+library(tidyr)
 library(cmdstanr)
+library(cowplot)
 
 this_theme <- theme(axis.title = element_text(size = 15, face = "bold"),
                     axis.text = element_text(face = "bold"))
@@ -44,7 +46,7 @@ upr.5 <- get_quant(p_size_pred, .75)
 lwr.5 <- get_quant(p_size_pred, .25)
 
 # plot survival vs size
-data.frame(mu, upr, lwr, upr.5, lwr.5, size = size_pred) %>% 
+p1 <- data.frame(mu, upr, lwr, upr.5, lwr.5, size = size_pred) %>% 
   ggplot(aes(x = size, y = mu)) +
   geom_line(linewidth = 1) +
   geom_ribbon(aes(x = size, ymin = lwr, ymax = upr), alpha = .25) +
@@ -78,7 +80,7 @@ lwr.5 <- get_quant(p_rgr, .25)
 
 
 # plot the survival vs relative growth
-data.frame(mu, upr, lwr, upr.5, lwr.5, rgr_pred) %>% 
+p2 <- data.frame(mu, upr, lwr, upr.5, lwr.5, rgr_pred) %>% 
   ggplot(aes(x = rgr_pred, y = mu)) +
   geom_line(linewidth = 1) +
   geom_ribbon(aes(x = rgr_pred, ymax = upr, ymin = lwr), alpha = .25) +
@@ -104,7 +106,7 @@ mu_13 <- as.numeric(apply(p_rgr_13, 2, mean))
 mu_14 <- as.numeric(apply(p_rgr_14, 2, mean))
 
 # plot survival vs age vs rgr
-data.frame(mu_11, mu_12, mu_13, mu_14, rgr_pred) %>% 
+p3 <- data.frame(mu_11, mu_12, mu_13, mu_14, rgr_pred) %>% 
   tidyr::pivot_longer(1:4, names_to = "age", values_to = "p") %>% 
   mutate(age = factor(gsub("mu_", "", age), levels = c(11,12,13,14))) %>% 
   ggplot(aes(x = rgr_pred, y = p, color = age)) +
@@ -117,6 +119,31 @@ data.frame(mu_11, mu_12, mu_13, mu_14, rgr_pred) %>%
   this_theme
 
 ggsave(snakemake@output[[3]], device = "svg", width = 12, height = 8)
+
+
+
+p_rgr_1sd <- fit$draws("p_rgr_plus_1sd_seed", format = "df")[,1:length(rgr_pred)]
+p_rgr_m1sd <- fit$draws("p_rgr_minus_1sd_seed", format = "df")[,1:length(rgr_pred)]
+
+mu_0 <- apply(p_rgr, 2, mean)
+mu_1 <- apply(p_rgr_1sd, 2, mean)
+mu_m1 <- apply(p_rgr_m1sd, 2, mean)
+
+p4 <- data.frame(mu_0, mu_1, mu_m1, rgr_pred) %>% 
+  pivot_longer(1:3, names_to = "seed_size", values_to = "p") %>% 
+  ggplot(aes(x = rgr_pred, y = p, color = seed_size)) +
+  geom_line(linewidth = 1) +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  this_theme
+  
+ggsave(snakemake@output[[4]], device = "svg", width = 12, height = 8)
+
+
+plot_grid(p1, p2, p3, p4, ncol = 2, labels = "AUTO")
+
+ggsave(snakemake@output[[5]], device = "svg", width = 12, height = 12)
+
 
 print("All plots made")
 
