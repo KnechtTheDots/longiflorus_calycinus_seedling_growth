@@ -11,3 +11,5 @@ dependencies:
   - r-posterior =1.6.1
   - r-cmdstanr =0.9.0
   - r-tidyr =1.3.2
+  - r-cowplot =1.2.0
+  - r-ggbeeswarm =0.7.3

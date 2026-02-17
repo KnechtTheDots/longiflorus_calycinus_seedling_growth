@@ -2,10 +2,8 @@
 
 rule target:
     input:
-        expand("results/plots/post_pred_checks/{plot}.svg", plot=["pred_vs_obs", "dens", "sd", "mean", "min", "max"]),
-        expand("results/plots/rhat_{part}_ess.svg", part=["bulk", "tail"]),
-        expand("results/plots/survival/{plot}.svg", plot=["survival_vs_size", "survival_vs_rgr", "survival_vs_age_rgr"])
-
+        epi="results/plots/epi_test/eip.svg",
+        obs="results/plots/epi_test/obs.svg"
 # this rule takes the files from data collectio and creates the set 
 # of files that will be used for the analysis
 
@@ -70,3 +68,37 @@ rule survival_plots:
         "envs/plots.yaml"
     script:
         "scripts/survival_plots.R"
+
+rule trait_boots:
+    input:
+        traits="results/wrangled/traits.csv"
+    output:
+        survive="results/trait_boots/survive.csv",
+        day_4="results/trait_boots/day_4.csv",
+        day_17="results/trait_boots/day_17.csv",
+        rgr="results/trait_boots/rgr.csv",
+        height="results/trait_boots/height.csv"
+    log:
+        log="results/logs/trait_boots.log"
+    conda:
+        "envs/wrangling.yaml"
+    script:
+        "scripts/trait_boots.R"
+
+rule epi_plots:
+    input:
+        survive="results/trait_boots/survive.csv",
+        day_4="results/trait_boots/day_4.csv",
+        day_17="results/trait_boots/day_17.csv",
+        rgr="results/trait_boots/rgr.csv",
+        height="results/trait_boots/height.csv",
+        traits="results/wrangled/traits.csv"
+    output:
+        epi="results/plots/epi_test/eip.svg",
+        obs="results/plots/epi_test/obs.svg"
+    log:
+        log="results/logs/epi_plots.log"
+    conda:
+        "envs/plots.yaml"
+    script:
+        "scripts/epi_plots.R"
