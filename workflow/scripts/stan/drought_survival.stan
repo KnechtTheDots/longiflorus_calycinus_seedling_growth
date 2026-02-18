@@ -33,6 +33,7 @@ parameters{
   cholesky_factor_corr[2] L_Omega; // cholesky factor of the correlation matrix between rgr and log_size_0
   real alpha_survive; // intercept of the survival logistic regression
   real beta_survive; // slope of the survival logistic regression
+  real b_rgr_surv;
 }
 transformed parameters{
   vector[n_short] log_size_0; // log(size_0) 
@@ -60,6 +61,7 @@ model{
   sig_m ~ exponential(1); // ~ .025 <-> 3.7
   alpha_survive ~ normal(0, 1);
   beta_survive ~ normal(0, 1);
+  b_rgr_surv ~ normal(0, 1);
   
   // mu = E(log_area | log_size, rgr, age)
   vector[n_long] mu = log_size_0[id_long] + rgr[id_long] .* age;
@@ -68,7 +70,7 @@ model{
   log_area ~ normal(mu, sig_m);
   
   // likelihood for survival
-  survive ~ bernoulli_logit(alpha_survive + beta_survive * final_size_std);
+  survive ~ bernoulli_logit(alpha_survive + beta_survive * final_size_std + b_rgr_surv .* Z[1,]');
 }
 generated quantities{
   // recover the correlation matrix of log_size_0 and rgr from the cholesky decomposition
