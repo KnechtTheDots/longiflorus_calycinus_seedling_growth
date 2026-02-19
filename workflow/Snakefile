@@ -97,7 +97,8 @@ rule epi_plots:
         traits="results/wrangled/traits.csv"
     output:
         epi="results/plots/epi_test/epi.svg",
-        obs="results/plots/epi_test/obs.svg"
+        obs="results/plots/epi_test/obs.svg",
+        mean_diffs="results/plots/epi_test/mean_diffs.svg"
     log:
         log="results/logs/epi_plots.log"
     conda:

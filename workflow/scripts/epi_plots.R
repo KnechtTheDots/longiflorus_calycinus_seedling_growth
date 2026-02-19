@@ -142,6 +142,55 @@ dheight <- d %>%
 
 
 plot_grid(d4, d17, drgr, dheight, ncol = 2, labels = "AUTO")
-ggsave(snakemake@output[['obs']], device = "svg", width = 12, height = 12)
+ggsave(snakemake@output[['obs']], device = "svg", width = 12, height = 8)
+
+
+
+
+mean_diffs <- function(df, trait){
+  data.frame("F2-F1" = df$f2 - df$f1,
+             "F2-LON" = df$f2 - df$lon,
+             "F2-CAL" = df$f2 - df$cal,
+             "F1-LON" = df$f1 - df$lon,
+             "F1-CAL" = df$f1 - df$cal,
+             "LON-CAL" = df$lon - df$cal) %>% 
+    pivot_longer(1:6, names_to = "comp", values_to = "diff") %>% 
+    group_by(comp) %>% 
+    mutate(comp = case_when(comp == "F2.F1" ~ "F2-F1",
+                            comp == "F2.LON" ~ "F2-LON",
+                            comp == "F2.CAL" ~ "F2-CAL",
+                            comp == "F1.LON" ~ "F1-LON",
+                            comp == "F1.CAL" ~ "F1-CAL",
+                            comp == "LON.CAL" ~ "LON-CAL"),
+           comp = factor(comp, levels = c("F2-F1","F2-LON","F2-CAL",
+                                          "F1-LON","F1-CAL","LON-CAL"))) %>% 
+    summarise(mu = mean(diff),
+              upr = quantile(diff, .975),
+              lwr = quantile(diff, .025),
+              upr.5 = quantile(diff, .75),
+              lwr.5 = quantile(diff, .25)) %>% 
+    ggplot(y = comp, x = mu) +
+    geom_vline(xintercept = 0, color = "grey") +
+    geom_errorbarh(aes(y = comp, xmax = upr, xmin = lwr), height = 0, linewidth = 1) +
+    geom_errorbarh(aes(y = comp, xmax = upr.5, xmin = lwr.5), height = 0, linewidth = 1.5) +
+    labs(y = "",
+         x = paste0("Difference in ", trait, " Means")) +
+    theme_minimal() +
+    this_theme
+}
+
+
+diff_surv <- mean_diffs(surv, "Survival")
+diff_d4 <- mean_diffs(day_4, "Size on Day 4")
+diff_d17 <- mean_diffs(day_17, "Size on Day 17")
+diff_rgr <- mean_diffs(rgr, "RGR")
+diff_height <- mean_diffs(height, "Height on Day 122")
+
+plot_grid(diff_surv, diff_d4, diff_d17, diff_rgr, diff_height, labels = "AUTO",
+          ncol = 3)
+
+ggsave(snakemake@output[['mean_diffs']], device = "svg", width = 12, height = 8)
+
+
 
 on.exit(sink())

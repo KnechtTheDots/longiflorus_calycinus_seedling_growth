@@ -49,7 +49,7 @@ transformed parameters{
   rgr = Beta[1,]';
   log_size_0 = Beta[2,]';
   }
-  
+ vector[n_short] z_rgr = (rgr - rgr_bar)/tau[1]; 
 }
 model{
   to_vector(Z) ~ normal(0, 1); // 95% ~ -2 <-> 2
@@ -70,11 +70,11 @@ model{
   log_area ~ normal(mu, sig_m);
   
   // likelihood for survival
-  survive ~ bernoulli_logit(alpha_survive + beta_survive * final_size_std + b_rgr_surv .* Z[1,]');
+  survive ~ bernoulli_logit(alpha_survive + beta_survive * final_size_std + b_rgr_surv .* z_rgr[id_short]);
 }
 generated quantities{
   // recover the correlation matrix of log_size_0 and rgr from the cholesky decomposition
-  // don't need it for now but keep it so I remember matrix[2,2] R = multiply_lower_tri_self_transpose(L_Omega);
+  // don't need it for now but keep it so I remember later matrix[2,2] R = multiply_lower_tri_self_transpose(L_Omega);
   
   // posterior predictive of size at the final age
   array[n_short] real y_rep = normal_rng(log_size_0[id_short] + rgr[id_short] .* age_max, sig_m);
