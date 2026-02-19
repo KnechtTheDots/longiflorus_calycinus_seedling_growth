@@ -23,8 +23,7 @@ dat <- list(
   final_size = short$seedling_area,
   seed = short$seed_size,
   age_max = short$age,
-  size_pred = seq(-2,2.5,l = 100),
-  rgr_pred = seq(.125, .325, l = 100)
+  z_tilde = seq(-4,2, l = 100)
 )
 
 # compile the stan file into the executable 

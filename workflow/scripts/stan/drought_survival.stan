@@ -10,8 +10,7 @@ data{
   vector[n_short] seed; // seed size of each individual
   vector[n_short] final_size; // size of seedling before drought treatment
   vector[n_short] age_max; // age at the last time point, for the post-predictive
-  vector[n_pred] size_pred;
-  vector[n_pred] rgr_pred;
+  vector[n_pred] z_tilde; // vector of standardized x values to predict over
 }
 transformed data{
   // log of area (exponential growth)
@@ -32,9 +31,9 @@ parameters{
   real<lower=0> rgr_bar; // mean relative growth rate
   cholesky_factor_corr[2] L_Omega; // cholesky factor of the correlation matrix between rgr and log_size_0
   real alpha_survive; // intercept of the survival logistic regression
-  real beta_survive; // slope of the survival logistic regression
-  real b_rgr_surv;
-}
+  real beta_size_survive; // slope of the survival logistic regression on size
+  real beta_rgr_survive; // slope of the survival logistic regression or rgr
+ }
 transformed parameters{
   vector[n_short] log_size_0; // log(size_0) 
   vector[n_short] rgr; // relative growth rate
@@ -60,8 +59,8 @@ model{
   rgr_bar ~ normal(0, .25); // ~ -.5 <-> .5
   sig_m ~ exponential(1); // ~ .025 <-> 3.7
   alpha_survive ~ normal(0, 1);
-  beta_survive ~ normal(0, 1);
-  b_rgr_surv ~ normal(0, 1);
+  beta_size_survive ~ normal(0, 1);
+  beta_rgr_survive ~ normal(0, 1);
   
   // mu = E(log_area | log_size, rgr, age)
   vector[n_long] mu = log_size_0[id_long] + rgr[id_long] .* age;
@@ -70,23 +69,26 @@ model{
   log_area ~ normal(mu, sig_m);
   
   // likelihood for survival
-  survive ~ bernoulli_logit(alpha_survive + beta_survive * final_size_std + b_rgr_surv .* z_rgr[id_short]);
+  survive ~ bernoulli_logit(alpha_survive + beta_size_survive * final_size_std + beta_rgr_survive * z_rgr[id_short]);
 }
 generated quantities{
   // recover the correlation matrix of log_size_0 and rgr from the cholesky decomposition
-  // don't need it for now but keep it so I remember later matrix[2,2] R = multiply_lower_tri_self_transpose(L_Omega);
+  // don't need it for now but keep it commented so I remember later if I want it
+  //matrix[2,2] R = multiply_lower_tri_self_transpose(L_Omega);
   
   // posterior predictive of size at the final age
   array[n_short] real y_rep = normal_rng(log_size_0[id_short] + rgr[id_short] .* age_max, sig_m);
   
-  // posterior of survival probability over log_size
-  vector[n_pred] p_size_pred = inv_logit(alpha_survive + beta_survive * size_pred);
-  // posterior of survival over relative growth rate at 3 ages and 3 seed sizes
-  vector[n_pred] p_rgr_age11_pred = inv_logit(alpha_survive + beta_survive * (exp(gamma + rgr_pred*11) - mu_final_size)/sd_final_size);
-  vector[n_pred] p_rgr_age12_pred = inv_logit(alpha_survive + beta_survive * (exp(gamma + rgr_pred*12) - mu_final_size)/sd_final_size);
-  vector[n_pred] p_rgr_age13_pred = inv_logit(alpha_survive + beta_survive * (exp(gamma + rgr_pred*13) - mu_final_size)/sd_final_size);
-  vector[n_pred] p_rgr_age14_pred = inv_logit(alpha_survive + beta_survive * (exp(gamma + rgr_pred*14) - mu_final_size)/sd_final_size);
-  vector[n_pred] p_rgr_minus_1sd_seed = inv_logit(alpha_survive + beta_survive * (exp(gamma - beta + rgr_pred*14) - mu_final_size)/sd_final_size);
-  vector[n_pred] p_rgr_plus_1sd_seed = inv_logit(alpha_survive + beta_survive * (exp(gamma + beta + rgr_pred*14) - mu_final_size)/sd_final_size);
+  // posterior of survival given size when relative growth rate is at the mean
+  // vector[n_pred] p_size_pred = inv_logit(alpha_survive + beta_size_survive * z_tilde);
+  // vector[n_pred] p_rgr_pred = inv_logit(alpha_survive + beta_rgr_survive * z_tilde);
+  
+  // assume size is calculated at age 14
+  vector[n_pred] p_pred;
+  {
+    vector[n_pred] rgr_temp = z_tilde * tau[1] + rgr_bar;
+    vector[n_pred] z_size_pred = (mean(log_size_0) + rgr_temp * 14 - mu_final_size)/sd_final_size;
+    p_pred = inv_logit(alpha_survive + beta_size_survive * z_size_pred + beta_rgr_survive * z_tilde);
+  }
   
 }
