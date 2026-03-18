@@ -78,7 +78,10 @@ delta_f2 <- data.frame(Survive = delta(surv$f2, surv$f1, surv$lon, surv$cal)/sur
             upr = quantile(delta, .975),
             lwr = quantile(delta, .025),
             upr.5 = quantile(delta, .75),
-            lwr.5 = quantile(delta, .25)) %>% 
+            lwr.5 = quantile(delta, .25),
+            prop = round(mean(delta < 0), 2)) %>%
+  ungroup() %>% 
+  mutate(prop_place = max(upr)*1.2) %>% 
   mutate(Trait = c("Survive", "Day 17", "Day 4", "Height", "RGR"),
          Trait = factor(Trait, levels = c("Survive", "Day 4", "Day 17", "RGR", "Height"))) %>% 
   ggplot(aes(x = Trait, y = mu)) +
@@ -86,6 +89,8 @@ delta_f2 <- data.frame(Survive = delta(surv$f2, surv$f1, surv$lon, surv$cal)/sur
   geom_errorbar(aes(x = Trait, ymax = upr, ymin = lwr), width = 0, linewidth = 1) +
   geom_errorbar(aes(x = Trait, ymax = upr.5, ymin = lwr.5), width = 0,
                 linewidth = 1.5) +
+  geom_text(aes(x = Trait, y = prop_place, label = prop),
+            fontface = "bold") +
   labs(y = "Deviation/E(F2)",
        x = "") +
   theme_minimal() +
@@ -168,11 +173,17 @@ mean_diffs <- function(df, trait){
               upr = quantile(diff, .975),
               lwr = quantile(diff, .025),
               upr.5 = quantile(diff, .75),
-              lwr.5 = quantile(diff, .25)) %>% 
+              lwr.5 = quantile(diff, .25),
+              prop = round(mean(diff < 0), 2),
+              prop_place = max(upr)*1.2) %>%
+    ungroup() %>% 
+    mutate(prop_place = max(prop_place)) %>% 
     ggplot(y = comp, x = mu) +
     geom_vline(xintercept = 0, color = "grey") +
     geom_errorbarh(aes(y = comp, xmax = upr, xmin = lwr), height = 0, linewidth = 1) +
     geom_errorbarh(aes(y = comp, xmax = upr.5, xmin = lwr.5), height = 0, linewidth = 1.5) +
+    geom_text(aes(x = prop_place, y = comp, label = prop),
+              fontface = "bold") +
     labs(y = "",
          x = paste0("Difference in ", trait, " Means")) +
     theme_minimal() +

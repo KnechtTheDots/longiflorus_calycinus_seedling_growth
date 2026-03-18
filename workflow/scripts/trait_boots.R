@@ -4,6 +4,9 @@ log <- file(snakemake@log[['log']], open = "wt")
 sink(log, type = "output")
 sink(log, type = "message")
 
+# set seed for reproducibility
+
+set.seed(12042014)
 
 # define functions to do the bootstrapping and delta calculations
 b_boot <- function(n = 1e4, trait){

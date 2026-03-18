@@ -2,7 +2,7 @@
 
 rule target:
     input:
-        "results/drought_survival.RDS"
+        panel="results/plots/survival_mod_panel.svg"
 
 # this rule takes the files from data collectio and creates the set 
 # of files that will be used for the analysis
@@ -30,25 +30,31 @@ rule data_wrangling:
 rule drought_survival:
     input:
         long="results/wrangled/drought_long.csv",
-        short="results/wrangled/drought_short.csv"
+        short="results/wrangled/drought_short.csv",
+        traits="results/wrangled/traits.csv"
     output:
-        fit="results/drought_survival.RDS"
+        rgr="results/drought_survival_rgr.RDS",
+        sze="results/drought_survival_size.RDS",
+        rgr_size="results/drought_survival_rgr_size.RDS"
     log:
         log="results/logs/drought_survival_model.log"
     params:
-        stan="workflow/scripts/stan/drought_survival.stan"
+        rgr="workflow/scripts/stan/drought_survival_rgr.stan",
+        sze="workflow/scripts/stan/drought_survival_size.stan",
+        rgr_size="workflow/scripts/stan/drought_survival_rgr_size.stan"
     conda:
         "envs/cmdstanr.yaml"
+    threads:
+        4
     script:
         "scripts/drought_survival.R"
 
 rule post_pred_checks:
     input:
-        fit="results/drought_survival.RDS",
+        fit="results/drought_survival_rgr.RDS",
         short="results/wrangled/drought_short.csv"
     output:
-        expand("results/plots/post_pred_checks/{plot}.svg", plot=["pred_vs_obs", "dens", "sd", "mean", "min", "max"]),
-        expand("results/plots/rhat_{part}_ess.svg", part=["bulk", "tail"])
+        "results/plots/ppc.svg"
     log:
         log="results/logs/post_pred_checks.log"
     conda:
@@ -58,10 +64,13 @@ rule post_pred_checks:
 
 rule survival_plots:
     input:
-        fit="results/drought_survival.RDS",
-        short="results/wrangled/drought_short.csv"
+        size_mod="results/drought_survival_size.RDS",
+        rgr_mod="results/drought_survival_rgr.RDS",
+        rgr_size_mod="results/drought_survival_rgr_size.RDS",
+        short="results/wrangled/drought_short.csv",
+        long="results/wrangled/drought_long.csv"
     output:
-        expand("results/plots/survival/{plot}.svg", plot=["survival_vs_size", "survival_vs_rgr", "survival_vs_age_rgr", "survival_vs_seed_rgr", "panel_plot"])
+        panel="results/plots/survival_mod_panel.svg"
     log:
         log="results/logs/survival_plots.log"
     conda:
@@ -103,3 +112,23 @@ rule epi_plots:
         "envs/plots.yaml"
     script:
         "scripts/epi_plots.R"
+
+rule mod_compare:
+    input:
+        long="results/wrangled/drought_long.csv",
+        short="results/wrangled/drought_short.csv"
+    output:
+       compare="results/mod_compare/compare.csv",
+       weights="results/mod_compare/weights.csv"
+    log:
+        log="results/logs/mod_compare.log"
+    conda:
+        "envs/cmdstanr.yaml"
+    threads:
+        4
+    params:
+        rgr="workflow/scripts/stan/drought_survival_rgr.stan",
+        rgr_size="workflow/scripts/stan/drought_survival_rgr_size.stan",
+        rgr_size_seed="workflow/scripts/stan/drought_survival_rgr_size_seed.stan"
+    script:
+        "scripts/mod_compare.R"
