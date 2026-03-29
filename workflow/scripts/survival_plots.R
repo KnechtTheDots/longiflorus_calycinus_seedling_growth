@@ -19,7 +19,7 @@ get_cors <- function(r_rgr_size, r_age_size, r_seed_size, d, e, f){
   return(data.frame(a, b, c, d, e, f))
 }
 
-this_theme <- theme(axis.title = element_text(size = 15, face = "bold"),
+this_theme <- theme(axis.title = element_text(size = 12, face = "bold"),
                     axis.text = element_text(face = "bold"))
 
 get_quant <- function(x, quant){
@@ -75,7 +75,7 @@ for(i in 1:3){
               lwr.5 = quantile(p, .25)) %>% 
     mutate(z_rgr = as.numeric(z_rgr)) %>% 
     ggplot(aes(x = z_rgr, y = mu)) +
-    geom_line(linewidth = 1) +
+    geom_line(linewidth = .75) +
     geom_ribbon(aes(x = z_rgr, ymax = upr, ymin = lwr), alpha = .25) +
     geom_ribbon(aes(x = z_rgr, ymax = upr.5, ymin = lwr.5), alpha = .25) +
     geom_jitter(data = rgr_surv, aes(x = z_rgr, y = survive), width = 0, height = .01) +
@@ -83,6 +83,8 @@ for(i in 1:3){
          y = "Survival Probability") +
     theme_minimal() +
     this_theme
+  
+  
   ## plot the correlations
   
   
@@ -113,12 +115,16 @@ for(i in 1:3){
   }
   
   if(i==2){
+    cors$h <- r_rgr_surv
+  }
+  
+  if(i==3){
     cors$g <- (r_size_surv - r_rgr_size*r_rgr_surv)/(1 - r_rgr_size^2)
     
     cors$h <- r_rgr_surv - cors$g*r_rgr_size
   }
   
-  levs <- rev(letters[1:ncol(cors)])
+  levs <- rev(colnames(cors))
   
   path_coefs[[i]] <- cors %>% 
     pivot_longer(1:ncol(cors), names_to = "path", values_to = "cor") %>% 
@@ -144,15 +150,15 @@ for(i in 1:3){
 mods <- list()
 for(i in 1:3){
   to_survive <- data.frame(x = c(-1, 0), xend = c(-.06,0),
-                           y = c(-.94,.06), yend = c(.95,.95))
-  to_size <- data.frame(x = c(-1,0,1), xend = c(-.06,0,.06),
-                        y = c(-.94,-.94,-.94), yend = c(-.06,-.06,-.06))
-  to_phenos <- data.frame(x = c(-1,-1,.06), xend = c(-.06,1,1),
-                          y = c(-1.06,-1.06,-1.06), yend = c(-1.06,-1.06,-1.06))
+                           y = c(-.9,.1), yend = c(.9,.9))
+  to_size <- data.frame(x = c(-1,0,1), xend = c(-.1,0,.1),
+                        y = c(-.9,-.9,-.9), yend = c(-.1,-.1,-.1))
+  to_phenos <- data.frame(x = c(-.9,-.9,.1), xend = c(-.1,.9,.9),
+                          y = c(-1.1,-1.1,-1.1), yend = c(-1.1,-1.1,-1.1))
   
   paths <- data.frame(variables = letters[1:8],
-                      x = c(-.5, .05, .5, -.55, .55, 0, .05, -.5),
-                      y = c(-.55, -.55, -.55, -1.1, -1.1, -1.5, .3, .3))
+                      x = c(-.5, .05, .5, -.5, .5, 0, .05, -.5),
+                      y = c(-.55, -.55, -.55, -1.1, -1.1, -1.4, .3, .3))
   
   if(i==1){
     to_survive <- to_survive[2,]
@@ -200,11 +206,11 @@ for(i in 1:3){
 
 
 # plot size, rgr, size-rgr
-plot_grid(plots[[1]], plots[[2]], plots[[3]], 
+final_plot <- plot_grid(plots[[1]], plots[[2]], plots[[3]], 
           mods[[1]], mods[[2]], mods[[3]],
           path_coefs[[1]], path_coefs[[2]], path_coefs[[3]],ncol = 3, labels = "AUTO")
 
-ggsave(snakemake@output[[1]], device = "svg", width = 12, height = 8)
+ggsave(final_plot, snakemake@output[[1]], device = "svg", width = 12, height = 8)
 
 alpha <- fit$draws("alpha_survive", format = "df")$alpha_survive
 beta <- fit$draws("beta_rgr_survive", format = "df")$beta_rgr_survive

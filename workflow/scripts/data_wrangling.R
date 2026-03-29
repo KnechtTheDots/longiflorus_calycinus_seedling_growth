@@ -15,6 +15,9 @@ d4 <- read.csv(snakemake@input[['day_4']])
 d17 <- read.csv(snakemake@input[['day_17']])
 # read in the information that identifies the plants
 germ_id <- read.csv(snakemake@input[['ids']])
+# there are 2 entries that are F1's but got labeled as LON, change them to F1
+germ_id$line[germ_id$line=="LON" & grepl("CAL", germ_id$cross)] <- "F1"
+
 # read in the height data
 height <- read.csv(snakemake@input[['height']])
 
@@ -67,7 +70,7 @@ d <- d %>%
   drop_na(day_17) %>% 
   mutate(height = as.numeric(height),
          survive = ifelse(is.na(height), 0, 1)) %>% 
-         select(line, day_4, day_17, height, survive)
+         select(line, day_4, day_17, height, survive, cross)
 
 write.csv(d, snakemake@output[['traits']], row.names = F, quote = F)
 

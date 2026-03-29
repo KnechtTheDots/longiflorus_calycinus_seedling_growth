@@ -2,7 +2,10 @@
 
 rule target:
     input:
-        panel="results/plots/survival_mod_panel.svg"
+        traits="results/posteriors/traits.csv",
+        betas="results/posteriors/betas.csv",
+        diffs="results/posteriors/diffs.csv",
+        corrs="results/posteriors/corrs.csv"
 
 # this rule takes the files from data collectio and creates the set 
 # of files that will be used for the analysis
@@ -113,22 +116,26 @@ rule epi_plots:
     script:
         "scripts/epi_plots.R"
 
-rule mod_compare:
+rule get_posterior:
     input:
-        long="results/wrangled/drought_long.csv",
-        short="results/wrangled/drought_short.csv"
+        survive="results/trait_boots/survive.csv",
+        day_4="results/trait_boots/day_4.csv",
+        day_17="results/trait_boots/day_17.csv",
+        rgr="results/trait_boots/rgr.csv",
+        height="results/trait_boots/height.csv",
+        mod_size="results/drought_survival_size.RDS",
+        mod_rgr="results/drought_survival_rgr.RDS",
+        mod_rgr_size="results/drought_survival_rgr_size.RDS",
+        short="results/wrangled/drought_short.csv",
+        long="results/wrangled/drought_long.csv"
     output:
-       compare="results/mod_compare/compare.csv",
-       weights="results/mod_compare/weights.csv"
+        traits="results/posteriors/traits.csv",
+        betas="results/posteriors/betas.csv",
+        diffs="results/posteriors/diffs.csv",
+        corrs="results/posteriors/corrs.csv"
     log:
-        log="results/logs/mod_compare.log"
+        log="results/logs/get_posteriors.log"
     conda:
-        "envs/cmdstanr.yaml"
-    threads:
-        4
-    params:
-        rgr="workflow/scripts/stan/drought_survival_rgr.stan",
-        rgr_size="workflow/scripts/stan/drought_survival_rgr_size.stan",
-        rgr_size_seed="workflow/scripts/stan/drought_survival_rgr_size_seed.stan"
+        "envs/plots.yaml"
     script:
-        "scripts/mod_compare.R"
+        "scripts/get_posteriors.R"

@@ -9,18 +9,25 @@ sink(log, type = "message")
 set.seed(12042014)
 
 # define functions to do the bootstrapping and delta calculations
-b_boot <- function(n = 1e4, trait){
-  weights <- gtools::rdirichlet(n, rep(1, length(trait)))
-  return(apply(weights, 1, function(x) sum(x*trait)))
+b_boot <- function(n = 1e4, trait, cross){
+  cross_id <- unique(cross)
+  boots <- matrix(nrow = n, ncol = length(unique(cross)))
+  for(i in 1:length(unique(cross))){
+    vals <- trait[cross==cross_id[i]]
+    weights <- gtools::rdirichlet(n, rep(1, length(vals)))
+    boots[,i] <- apply(weights, 1, function(x) sum(x*vals))
+  }
+  
+  return(apply(boots, 1, mean))
 }
 
 
 
 boot_df_make <- function(f2, f1, lon, cal, trait){
-  f2 <- b_boot(trait = f2[,trait])
-  f1 <- b_boot(trait = f1[,trait])
-  lon <- b_boot(trait = lon[,trait])
-  cal <- b_boot(trait = cal[,trait])
+  f2 <- b_boot(trait = f2[,trait], cross = f2$cross)
+  f1 <- b_boot(trait = f1[,trait], cross = f1$cross)
+  lon <- b_boot(trait = lon[,trait], cross = lon$cross)
+  cal <- b_boot(trait = cal[,trait], cross = cal$cross)
   e_f2 <- .5*f1 + .25*(lon + cal)
   return(data.frame(f2, f1, lon, cal, e_f2))
 }
