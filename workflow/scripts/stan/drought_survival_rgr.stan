@@ -102,6 +102,9 @@ generated quantities{
   vector[n_short] final_rep = exp(to_vector(y_rep));
   array[n_short] int surv_rep = bernoulli_logit_rng(alpha_survive + beta_rgr_survive * z_rgr[id_short]);
   
+  vector[n_short] w = to_vector(surv_rep)/mean(to_vector(surv_rep));
+  real sigma_w = sd(w);
+  
   // assume size is calculated at age 14
   vector[n_pred] p_pred = inv_logit(alpha_survive + beta_rgr_survive * z_tilde);
   vector[n_pred] rgr_pred = rgr_bar + z_tilde * tau[1];

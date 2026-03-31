@@ -2,10 +2,15 @@
 
 rule target:
     input:
+        panel="results/plots/survival_mod_panel.svg",
+        epi="results/plots/epi_test/epi.svg",
+        obs="results/plots/epi_test/obs.svg",
+        mean_diffs="results/plots/epi_test/mean_diffs.svg",
         traits="results/posteriors/traits.csv",
         betas="results/posteriors/betas.csv",
         diffs="results/posteriors/diffs.csv",
-        corrs="results/posteriors/corrs.csv"
+        corrs="results/posteriors/corrs.csv",
+        ppc="results/plots/post_pred/ppc.svg"
 
 # this rule takes the files from data collectio and creates the set 
 # of files that will be used for the analysis
@@ -28,23 +33,47 @@ rule data_wrangling:
     script:
         "scripts/data_wrangling.R"
 
+
+# this rule doesn't really do anything, it just spits out a file that says "stan files updated", the purpose of the
+# rule is to get the stan files as input in the workflow so that when they are modified it triggers the workflow
+# to re-create anything that is dependent on the stan files.
+rule stan_compile:
+    input:
+        rgr="workflow/scripts/stan/drought_survival_rgr.stan",
+        sze="workflow/scripts/stan/drought_survival_size.stan",
+        rgr_size="workflow/scripts/stan/drought_survival_rgr_size.stan"
+    output:
+        "workflow/scripts/stan/compile_complete.txt"
+    log:
+        log="results/logs/compile.log"
+    conda:
+        "envs/cmdstanr.yaml"
+    shell:
+        """
+        (echo stan files updated > {output}) 2> {log}
+        """
+
+
+
+
 # run the stan code to fit the growth rate/survival model
 
 rule drought_survival:
     input:
         long="results/wrangled/drought_long.csv",
         short="results/wrangled/drought_short.csv",
-        traits="results/wrangled/traits.csv"
+        traits="results/wrangled/traits.csv",
+        compiled="workflow/scripts/stan/compile_complete.txt"
     output:
         rgr="results/drought_survival_rgr.RDS",
         sze="results/drought_survival_size.RDS",
         rgr_size="results/drought_survival_rgr_size.RDS"
-    log:
-        log="results/logs/drought_survival_model.log"
     params:
         rgr="workflow/scripts/stan/drought_survival_rgr.stan",
         sze="workflow/scripts/stan/drought_survival_size.stan",
         rgr_size="workflow/scripts/stan/drought_survival_rgr_size.stan"
+    log:
+        log="results/logs/drought_survival_model.log"
     conda:
         "envs/cmdstanr.yaml"
     threads:
@@ -57,7 +86,7 @@ rule post_pred_checks:
         fit="results/drought_survival_rgr.RDS",
         short="results/wrangled/drought_short.csv"
     output:
-        "results/plots/ppc.svg"
+        "results/plots/post_pred/ppc.svg"
     log:
         log="results/logs/post_pred_checks.log"
     conda:

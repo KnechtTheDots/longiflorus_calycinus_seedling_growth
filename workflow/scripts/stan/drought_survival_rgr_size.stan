@@ -113,6 +113,8 @@ generated quantities{
                                                    beta_size_survive * z_size_rep[id_short]);
   }
   
+  vector[n_short] w = to_vector(surv_rep)/mean(to_vector(surv_rep));
+  real sigma_w = sd(w);
   
   vector[n_pred] p_pred;
   {
@@ -124,6 +126,9 @@ generated quantities{
     p_pred = inv_logit(alpha_survive + beta_rgr_survive * z_tilde + 
                                        beta_size_survive * z_size_pred);
   }
+  
+  
+  
   
   vector[n_pred] rgr_pred = rgr_bar + z_tilde * tau[1];
   

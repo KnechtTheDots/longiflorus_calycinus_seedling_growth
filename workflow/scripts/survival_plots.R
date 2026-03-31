@@ -97,55 +97,71 @@ for(i in 1:3){
   age <- dat$age_max
   seed <- dat$seed
   
-  survive <- fit$draws("surv_rep", format = "df")[,1:nrow(short)]
+  w <- fit$draws("w", format = "df")[,1:nrow(short)]
+  sigma_w <- fit$draws("sigma_w", format = "df")$sigma_w
   
-  r_rgr_size <- r_age_size <- r_seed_size <- r_rgr_surv <- r_size_surv <- c()
+  r_rgr_size <- r_age_size <- r_seed_size <- r_rgr_w <- r_size_w <- c()
   for(j in 1:nrow(rgr)){
     r_rgr_size[j] <- cor(as.numeric(rgr[j,]), as.numeric(size[j,]))
     r_age_size[j] <- cor(age, as.numeric(size[j,]))
     r_seed_size[j] <- cor(seed, as.numeric(size[j,]))
-    r_rgr_surv[j] <- cor(as.numeric(rgr[j,]), as.integer(survive[j,]))
-    r_size_surv[j] <- cor(as.numeric(size[j,]), as.integer(survive[j,]))
+    r_rgr_w[j] <- cor(as.numeric(rgr[j,]), as.integer(w[j,]))
+    r_size_w[j] <- cor(as.numeric(size[j,]), as.integer(w[j,]))
   }
   
   cors <- get_cors(r_rgr_size, r_age_size, r_seed_size, d, e, f)
   
   if(i==1){
-    cors$g <- r_size_surv
+    cors$g <- r_size_w
+    cors$h <- 0
   }
   
   if(i==2){
-    cors$h <- r_rgr_surv
+    cors$g <- 0
+    cors$h <- r_rgr_w
   }
   
   if(i==3){
-    cors$g <- (r_size_surv - r_rgr_size*r_rgr_surv)/(1 - r_rgr_size^2)
+    cors$g <- (r_size_w - r_rgr_size*r_rgr_w)/(1 - r_rgr_size^2)
     
-    cors$h <- r_rgr_surv - cors$g*r_rgr_size
+    cors$h <- r_rgr_w - cors$g*r_rgr_size
   }
   
-  levs <- rev(colnames(cors))
+  # multiply the isolated correlations by the standard deviation for fitness
+  # to get the standardized selection differentials
+  selection_diffs <- data.frame(
+    RGR = (cors$h + cors$a * cors$g) * sigma_w,
+    Age = (cors$b * cors$g) * sigma_w,
+    SeedSize = (cors$c * cors$g) * sigma_w
+  )
   
-  path_coefs[[i]] <- cors %>% 
-    pivot_longer(1:ncol(cors), names_to = "path", values_to = "cor") %>% 
+  path_coefs[[i]] <- selection_diffs %>% 
+    pivot_longer(1:ncol(selection_diffs), names_to = "path",
+                 values_to = "S") %>% 
     group_by(path) %>% 
-    summarise(upr = quantile(cor, .975),
-              lwr = quantile(cor, .025),
-              upr.5 = quantile(cor, .75),
-              lwr.5 = quantile(cor, .25)) %>% 
-    mutate(path = factor(path, levels = levs)) %>% 
+    summarise(upr = quantile(S, .975),
+              lwr = quantile(S, .025),
+              upr.5 = quantile(S, .75),
+              lwr.5 = quantile(S, .25)) %>%  
+    mutate(path = factor(path, levels = c("RGR", "Age", "SeedSize"))) %>% 
     ggplot(aes()) +
-    geom_vline(xintercept = 0, color = "grey") +
-    geom_errorbarh(aes(y = path, xmin = lwr, xmax = upr),
-                   height = 0, linewidth = .75) +
-    geom_errorbarh(aes(y = path, xmin = lwr.5, xmax = upr.5),
-                   height = 0, linewidth = 1.5) +
+    geom_hline(yintercept = 0, color = "grey") +
+    geom_errorbar(aes(x = path, ymin = lwr, ymax = upr),
+                   width = 0, linewidth = .75) +
+    geom_errorbar(aes(x = path, ymin = lwr.5, ymax = upr.5),
+                   width = 0, linewidth = 1.5) +
+    labs(y = "Selection Differential") +
+    ylim(-.12, .6) +
     theme_minimal() +
-    theme(axis.title.y = element_blank())
+    theme(axis.title.x = element_blank()) +
+    this_theme
+  
+  
+
   
 }
 
-
+print("Main loop finished")
   
 mods <- list()
 for(i in 1:3){
@@ -170,7 +186,7 @@ for(i in 1:3){
     paths <- paths[paths$variables != "g",]
   }
   
-  mods[[i]] <- data.frame(variable = c("Survive", "Size", "RGR", "Age","SeedSize"),
+  mods[[i]] <- data.frame(variable = c("w", "Size", "RGR", "Age","SeedSize"),
              x = c(0, 0, -1, 0, 1),
              y = c(1, 0, -1, -1, -1)) %>% 
     ggplot(aes(x = x, y = y, label = variable)) +
@@ -202,7 +218,7 @@ for(i in 1:3){
 
 }
 
-
+print("Path plots made")
 
 
 # plot size, rgr, size-rgr
@@ -210,20 +226,10 @@ final_plot <- plot_grid(plots[[1]], plots[[2]], plots[[3]],
           mods[[1]], mods[[2]], mods[[3]],
           path_coefs[[1]], path_coefs[[2]], path_coefs[[3]],ncol = 3, labels = "AUTO")
 
-ggsave(final_plot, snakemake@output[[1]], device = "svg", width = 12, height = 8)
+print("final plot made")
 
-alpha <- fit$draws("alpha_survive", format = "df")$alpha_survive
-beta <- fit$draws("beta_rgr_survive", format = "df")$beta_rgr_survive
+ggsave(snakemake@output[[1]], final_plot, device = "svg", width = 12, height = 8)
 
-data.frame(alpha, beta) %>% 
-  pivot_longer(1:2, names_to = "coefficient", values_to = "estimate") %>% 
-  group_by(coefficient) %>% 
-  summarise(mean = mean(estimate),
-            "97.5%" = quantile(estimate, .975),
-            "75%" = quantile(estimate, .75),
-            "25%" = quantile(estimate, .25),
-            "2.5%" = quantile(estimate, .025)) #%>% 
-  #write.csv(snakemake@output[['coef']], row.names = F, quote = F)
 
 print("All plots made")
 

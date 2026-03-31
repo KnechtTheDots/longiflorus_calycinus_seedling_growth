@@ -105,6 +105,10 @@ generated quantities{
     surv_rep = bernoulli_logit_rng(alpha_survive + beta_size_survive * z_size_rep[id_short]);
   }
   
+  vector[n_short] w = to_vector(surv_rep)/mean(to_vector(surv_rep));
+  
+  real sigma_w = sd(w);
+  
   vector[n_pred] p_pred;
   {
     // calculate the final size (standardized to the data's values) using the mean

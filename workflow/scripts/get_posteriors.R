@@ -166,15 +166,16 @@ for(i in 1:3){
   age <- dat$age_max
   seed <- dat$seed
   
-  survive <- fit$draws("surv_rep", format = "df")[,1:nrow(short)]
+  w <- fit$draws("w", format = "df")[,1:nrow(short)]
+  sigma_w <- fit$draws("sigma_w", format = "df")$sigma_w
   
   r_rgr_size <- r_age_size <- r_seed_size <- r_rgr_surv <- r_size_surv <- c()
   for(j in 1:nrow(rgr)){
     r_rgr_size[j] <- cor(as.numeric(rgr[j,]), as.numeric(size[j,]))
     r_age_size[j] <- cor(age, as.numeric(size[j,]))
     r_seed_size[j] <- cor(seed, as.numeric(size[j,]))
-    r_rgr_surv[j] <- cor(as.numeric(rgr[j,]), as.integer(survive[j,]))
-    r_size_surv[j] <- cor(as.numeric(size[j,]), as.integer(survive[j,]))
+    r_rgr_surv[j] <- cor(as.numeric(rgr[j,]), as.integer(w[j,]))
+    r_size_surv[j] <- cor(as.numeric(size[j,]), as.integer(w[j,]))
   }
   
   cors <- get_cors(r_rgr_size, r_age_size, r_seed_size, d, e, f)
@@ -198,6 +199,10 @@ for(i in 1:3){
     
     cors$rgr_total <- cors$h + cors$a * cors$g
   }
+  
+  cors$s_rgr <- cors$rgr_total*sigma_w
+  cors$s_age <- (cors$b * cors$g)*sigma_w
+  cors$s_seedsize <- (cors$c * cors$g)*sigma_w
   
   cors <- cors %>% 
     pivot_longer(1:ncol(cors), names_to = "path", values_to = "value") %>% 
