@@ -5,7 +5,7 @@ contains information on traits and how they relate to fitness in a terminal drou
 
 ## Files used for the test for epistasis are:
 
-**day_4_areas.csv** with the following columns
+**day_4_areas.csv** with the following columns  
 tray_id: this is the id of each individual plant  
 day_4: area (in mm^2) of the seedling on day 4 of the experiment  
 
