@@ -16,3 +16,4 @@ dependencies:
 -   r-cowplot=1.2.0
 -   r-ggbeeswarm=0.7.3
 -   r-gtools=3.9.5
+-   cmdstan=2.38.0
