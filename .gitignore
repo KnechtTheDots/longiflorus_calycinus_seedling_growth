@@ -2,5 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
-.vscode
-.snakemake
+.vscode/
+.snakemake/
