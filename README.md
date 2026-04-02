@@ -13,4 +13,4 @@ snakemake --cores 4 --software-deployment-method conda
 # for the command to work.
 ```  
 
-The workflow will create the environment used for the analysis and complete it. (n.b. generating the environment can take a little time (~10-15 minutes))
+Snakemake will create the environment needed and execute the analysis pipeline. (n.b. generating the environment can take a little time (~10-15 minutes))
