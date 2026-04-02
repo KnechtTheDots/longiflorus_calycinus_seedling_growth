@@ -91,7 +91,7 @@ delta_f2 <- data.frame(Survive = delta(surv$f2, surv$f1, surv$lon, surv$cal)/sur
                 linewidth = 1.5) +
   geom_text(aes(x = Trait, y = prop_place, label = prop),
             fontface = "bold") +
-  labs(y = "Deviation/E(F2)",
+  labs(y = expression(Delta/E(F[2])),
        x = "") +
   theme_minimal() +
   theme(axis.text.x = element_text(size = 12, face = "bold"),

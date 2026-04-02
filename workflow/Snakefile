@@ -29,7 +29,7 @@ rule data_wrangling:
     log:
         log="results/logs/data_wrangling.log"
     conda:
-        "envs/wrangling.yaml"
+        "envs/environment.yaml"
     script:
         "scripts/data_wrangling.R"
 
@@ -47,7 +47,7 @@ rule stan_compile:
     log:
         log="results/logs/compile.log"
     conda:
-        "envs/cmdstanr.yaml"
+        "envs/environment.yaml"
     shell:
         """
         (echo stan files updated > {output}) 2> {log}
@@ -75,7 +75,7 @@ rule drought_survival:
     log:
         log="results/logs/drought_survival_model.log"
     conda:
-        "envs/cmdstanr.yaml"
+        "envs/environment.yaml"
     threads:
         4
     script:
@@ -90,7 +90,7 @@ rule post_pred_checks:
     log:
         log="results/logs/post_pred_checks.log"
     conda:
-        "envs/plots.yaml"
+        "envs/environment.yaml"
     script:
         "scripts/ppc_plots.R"
 
@@ -107,7 +107,7 @@ rule survival_plots:
     log:
         log="results/logs/survival_plots.log"
     conda:
-        "envs/plots.yaml"
+        "envs/environment.yaml"
     script:
         "scripts/survival_plots.R"
 
@@ -123,7 +123,7 @@ rule trait_boots:
     log:
         log="results/logs/trait_boots.log"
     conda:
-        "envs/wrangling.yaml"
+        "envs/environment.yaml"
     script:
         "scripts/trait_boots.R"
 
@@ -142,7 +142,7 @@ rule epi_plots:
     log:
         log="results/logs/epi_plots.log"
     conda:
-        "envs/plots.yaml"
+        "envs/environment.yaml"
     script:
         "scripts/epi_plots.R"
 
@@ -166,6 +166,6 @@ rule get_posterior:
     log:
         log="results/logs/get_posteriors.log"
     conda:
-        "envs/plots.yaml"
+        "envs/environment.yaml"
     script:
         "scripts/get_posteriors.R"
