@@ -81,6 +81,8 @@ rule drought_survival:
     script:
         "scripts/drought_survival.R"
 
+# conduct posterior predictive checks to validate the models and make a plot showing the results of the checks
+
 rule post_pred_checks:
     input:
         fit="results/drought_survival_rgr.RDS",
@@ -93,6 +95,8 @@ rule post_pred_checks:
         "envs/environment.yaml"
     script:
         "scripts/ppc_plots.R"
+
+# create plots showing the relationship between the traits in the drought trial and survival in the drought trial
 
 rule survival_plots:
     input:
@@ -111,6 +115,8 @@ rule survival_plots:
     script:
         "scripts/survival_plots.R"
 
+# Run the bayesian bootstrap for the epistasis test and creat csv's containing the results
+
 rule trait_boots:
     input:
         traits="results/wrangled/traits.csv"
@@ -126,6 +132,8 @@ rule trait_boots:
         "envs/environment.yaml"
     script:
         "scripts/trait_boots.R"
+
+# plot the results of the epistasis test (as well as differences between lines and the raw observations)
 
 rule epi_plots:
     input:
@@ -145,6 +153,8 @@ rule epi_plots:
         "envs/environment.yaml"
     script:
         "scripts/epi_plots.R"
+
+# generate csv's containing the posterior intervals (95% and 50%) and mean of all quantities described
 
 rule get_posterior:
     input:
