@@ -73,8 +73,6 @@ rule drought_survival:
         log="results/logs/drought_survival_model.log"
     conda:
         "envs/environment.yaml"
-    threads:
-        4
     script:
         "scripts/drought_survival.R"
 
