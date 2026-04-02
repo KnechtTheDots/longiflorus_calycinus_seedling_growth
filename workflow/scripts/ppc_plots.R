@@ -88,11 +88,11 @@ rhat_tail <- d %>%
   geom_hline(yintercept = 1.01, color = "red") +
   geom_vline(xintercept = 400, color = "red")
 
-plot_grid(obs_v_pred, dens_plot, mu_hist, sd_hist,
+grid <- plot_grid(obs_v_pred, dens_plot, mu_hist, sd_hist,
           min_hist, max_hist, rhat_bulk, rhat_tail,
           ncol = 4, labels = "AUTO")
 
-ggsave(snakemake@output[[1]], device = "svg", width = 12, height = 8)
+ggsave(snakemake@output[[1]], grid, device = "svg", width = 12, height = 8)
 
 
 on.exit(sink())

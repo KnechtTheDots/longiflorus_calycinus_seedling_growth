@@ -102,7 +102,8 @@ rule survival_plots:
         short="results/wrangled/drought_short.csv",
         long="results/wrangled/drought_long.csv"
     output:
-        panel="results/plots/survival_mod_panel.svg"
+        panel="results/plots/survival_mod_panel.svg",
+        comb_only="results/plots/survival_combined_mod.svg"
     log:
         log="results/logs/survival_plots.log"
     conda:

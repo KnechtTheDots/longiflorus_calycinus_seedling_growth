@@ -203,6 +203,7 @@ for(i in 1:3){
   cors$s_rgr <- cors$rgr_total*sigma_w
   cors$s_age <- (cors$b * cors$g)*sigma_w
   cors$s_seedsize <- (cors$c * cors$g)*sigma_w
+  cors$s_size <- cors$g * sigma_w
   
   cors <- cors %>% 
     pivot_longer(1:ncol(cors), names_to = "path", values_to = "value") %>% 

@@ -100,9 +100,9 @@ delta_f2 <- data.frame(Survive = delta(surv$f2, surv$f1, surv$lon, surv$cal)/sur
 
 
 
-plot_grid(p_surv, p_d4, p_d17, p_rgr, p_height, delta_f2, ncol = 3, labels = "AUTO")
+grid <- plot_grid(p_surv, p_d4, p_d17, p_rgr, p_height, delta_f2, ncol = 3, labels = "AUTO")
 
-ggsave(snakemake@output[['epi']], device = "svg", width = 12, height = 8)
+ggsave(snakemake@output[['epi']], grid, device = "svg", width = 12, height = 8)
 
 
 d <- read.csv(snakemake@input[['traits']])
@@ -146,8 +146,8 @@ dheight <- d %>%
   theme(axis.text.x = element_text(size = 12, face = "bold"))
 
 
-plot_grid(d4, d17, drgr, dheight, ncol = 2, labels = "AUTO")
-ggsave(snakemake@output[['obs']], device = "svg", width = 12, height = 8)
+grid <- plot_grid(d4, d17, drgr, dheight, ncol = 2, labels = "AUTO")
+ggsave(snakemake@output[['obs']], grid, device = "svg", width = 12, height = 8)
 
 
 
@@ -197,10 +197,10 @@ diff_d17 <- mean_diffs(day_17, "Size on Day 17")
 diff_rgr <- mean_diffs(rgr, "RGR")
 diff_height <- mean_diffs(height, "Height on Day 122")
 
-plot_grid(diff_surv, diff_d4, diff_d17, diff_rgr, diff_height, labels = "AUTO",
+grid <- plot_grid(diff_surv, diff_d4, diff_d17, diff_rgr, diff_height, labels = "AUTO",
           ncol = 3)
 
-ggsave(snakemake@output[['mean_diffs']], device = "svg", width = 12, height = 8)
+ggsave(snakemake@output[['mean_diffs']], grid, device = "svg", width = 12, height = 8)
 
 
 

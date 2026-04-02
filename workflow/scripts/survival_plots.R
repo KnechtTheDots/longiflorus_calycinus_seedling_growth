@@ -93,9 +93,13 @@ for(i in 1:3){
   f <- fit$draws("R_phenos", format = "df")$`R_phenos[1,3]`
   
   rgr <- fit$draws("rgr", format = "df")[,1:nrow(short)]
+  sigma_rgr <- apply(rgr, 1, sd)
   size <- fit$draws("final_rep", format = "df")[,1:nrow(short)]
+  sigma_size <- apply(size, 1, sd)
   age <- dat$age_max
   seed <- dat$seed
+  sigma_age <- sd(dat$age_max)
+  sigma_seed <- sd(dat$seed)
   
   w <- fit$draws("w", format = "df")[,1:nrow(short)]
   sigma_w <- fit$draws("sigma_w", format = "df")$sigma_w
@@ -129,29 +133,30 @@ for(i in 1:3){
   
   # multiply the isolated correlations by the standard deviation for fitness
   # to get the standardized selection differentials
-  selection_diffs <- data.frame(
+  selection_grads <- data.frame(
     RGR = (cors$h + cors$a * cors$g) * sigma_w,
+    Size = (cors$g) * sigma_w,
     Age = (cors$b * cors$g) * sigma_w,
     SeedSize = (cors$c * cors$g) * sigma_w
   )
   
-  path_coefs[[i]] <- selection_diffs %>% 
-    pivot_longer(1:ncol(selection_diffs), names_to = "path",
+  path_coefs[[i]] <- selection_grads %>% 
+    pivot_longer(1:ncol(selection_grads), names_to = "path",
                  values_to = "S") %>% 
     group_by(path) %>% 
     summarise(upr = quantile(S, .975),
               lwr = quantile(S, .025),
               upr.5 = quantile(S, .75),
               lwr.5 = quantile(S, .25)) %>%  
-    mutate(path = factor(path, levels = c("RGR", "Age", "SeedSize"))) %>% 
+    mutate(path = factor(path, levels = c("RGR", "Size", "Age", "SeedSize"))) %>% 
     ggplot(aes()) +
     geom_hline(yintercept = 0, color = "grey") +
     geom_errorbar(aes(x = path, ymin = lwr, ymax = upr),
                    width = 0, linewidth = .75) +
     geom_errorbar(aes(x = path, ymin = lwr.5, ymax = upr.5),
                    width = 0, linewidth = 1.5) +
-    labs(y = "Selection Differential") +
-    ylim(-.12, .6) +
+    labs(y = "Selection Gradient") +
+    #ylim(-.12, .6) +
     theme_minimal() +
     theme(axis.title.x = element_blank()) +
     this_theme
@@ -229,6 +234,10 @@ final_plot <- plot_grid(plots[[1]], plots[[2]], plots[[3]],
 print("final plot made")
 
 ggsave(snakemake@output[[1]], final_plot, device = "svg", width = 12, height = 8)
+
+combined_model_plot <- plot_grid(plots[[3]], mods[[3]], path_coefs[[3]], ncol = 1, labels = "AUTO")
+
+ggsave(snakemake@output[[2]], combined_model_plot, device = "svg", width = 8, height = 15)
 
 
 print("All plots made")
