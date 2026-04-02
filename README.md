@@ -1,2 +1,6 @@
 # Mimulus longiflorus x calycinus Seedling Growth
-Examine growth seedling growth rates of hybrids between Mimulus aurantiacus subsp. longiflorus and M. aurantiacus subsp. calycinus and how this affects fitness.
+This repository contains the analysis of genetic architecture for seedling traits and firness of intra- and inter population crosses between the *Mimulus aurantiacus* subspecies *longiflorus* and *calycinus*.  
+
+```bash
+snakemake --software-deployment-method conda
+```
