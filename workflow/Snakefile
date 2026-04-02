@@ -1,5 +1,6 @@
 
-
+# the target rule gives snakemake the final results to be generated and snakemake maps the inputs needed
+# for them and executes the workflow
 rule target:
     input:
         panel="results/plots/survival_mod_panel.svg",
