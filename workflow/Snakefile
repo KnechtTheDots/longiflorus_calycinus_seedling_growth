@@ -33,10 +33,10 @@ rule data_wrangling:
     script:
         "scripts/data_wrangling.R"
 
-
 # this rule doesn't really do anything, it just spits out a file that says "stan files updated", the purpose of the
 # rule is to get the stan files as input in the workflow so that when they are modified it triggers the workflow
-# to re-create anything that is dependent on the stan files.
+# to re-create anything that is dependent them.
+
 rule stan_compile:
     input:
         rgr="workflow/scripts/stan/drought_survival_rgr.stan",
@@ -52,9 +52,6 @@ rule stan_compile:
         """
         (echo stan files updated > {output}) 2> {log}
         """
-
-
-
 
 # run the stan code to fit the growth rate/survival model
 

@@ -1,0 +1,2 @@
+This directory contains a single file **environment.yaml** which contains all the software dependencies used for this analysis.  
+If using the conda software deployment method, snakemake will create this environment to run the workflow.
