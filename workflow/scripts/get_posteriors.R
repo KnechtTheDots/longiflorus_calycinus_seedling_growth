@@ -22,12 +22,12 @@ for(i in 1:5){
   d <- d %>% 
     pivot_longer(1:ncol(d), names_to = "line", values_to = "value") %>% 
     group_by(line) %>% 
-    summarise(quant.025 = quantile(value, .025),
-              quant.25 = quantile(value, .25),
-              mean = mean(value),
-              quant.75 = quantile(value, .75),
-              quant.975 = quantile(value, .975),
-              prop_less_0 = sum(value < 0)/n()) %>%
+    summarise(quant.025 = round(quantile(value, .025), 2),
+              quant.25 = round(quantile(value, .25), 2),
+              mean = round(mean(value), 2),
+              quant.75 = round(quantile(value, .75), 2),
+              quant.975 = round(quantile(value, .975), 2),
+              prop_less_0 = round(sum(value < 0)/n(), 2)) %>%
     mutate(Trait = traits[i])
   
   # write the results of the pairwise differences between lines to a file
@@ -47,11 +47,11 @@ for(i in 1:5){
                             comp == "LON.CAL" ~ "LON-CAL"),
            comp = factor(comp, levels = c("F2-F1","F2-LON","F2-CAL",
                                           "F1-LON","F1-CAL","LON-CAL"))) %>% 
-    summarise(quant.025 = quantile(value, .025),
-              quant.25 = quantile(value, .25),
-              mean = mean(value),
-              quant.75 = quantile(value, .75),
-              quant.975 = quantile(value, .975),
+    summarise(quant.025 = round(quantile(value, .025), 2),
+              quant.25 = round(quantile(value, .25), 2),
+              mean = round(mean(value), 2),
+              quant.75 = round(quantile(value, .75), 2),
+              quant.975 = round(quantile(value, .975), 2),
               prop_less_0 = round(mean(value < 0), 2)) %>% 
     mutate(trait = traits[i]) %>% 
     select(Trait = trait, Comparison = comp, quant.025, quant.25, mean, quant.75, quant.975, prop_less_0)
@@ -85,12 +85,12 @@ d <- rbind(size, rgr, rgr_comb, size_comb)
 
 d %>% 
   group_by(model, coefficient) %>% 
-  summarise(quant.025 = quantile(value, .025),
-            quant.25 = quantile(value, .25),
-            mean = mean(value),
-            quant.75 = quantile(value, .75),
-            quant.975 = quantile(value, .975),
-            prop_greater_0 = sum(value > 0)/n()) %>% 
+  summarise(quant.025 = round(quantile(value, .025), 2),
+            quant.25 = round(quantile(value, .25), 2),
+            mean = round(mean(value), 2),
+            quant.75 = round(quantile(value, .75), 2),
+            quant.975 = round(quantile(value, .975), 2),
+            prop_greater_0 = round(sum(value > 0)/n(), 2)) %>% 
   write.csv(snakemake@output[['betas']], row.names = F, quote = F)
 
 
@@ -111,11 +111,11 @@ data.frame("F2-F1" = df$f2 - df$f1,
                           comp == "LON.CAL" ~ "LON-CAL"),
          comp = factor(comp, levels = c("F2-F1","F2-LON","F2-CAL",
                                         "F1-LON","F1-CAL","LON-CAL"))) %>% 
-  summarise(mu = mean(diff),
-            upr = quantile(diff, .975),
-            lwr = quantile(diff, .025),
-            upr.5 = quantile(diff, .75),
-            lwr.5 = quantile(diff, .25),
+  summarise(mu = round(mean(diff), 2),
+            upr = round(quantile(diff, .975), 2),
+            lwr = round(quantile(diff, .025), 2),
+            upr.5 = round(quantile(diff, .75), 2),
+            lwr.5 = round(quantile(diff, .25), 2),
             prop_less_0 = round(mean(diff < 0), 2))
 
 
@@ -208,12 +208,12 @@ for(i in 1:3){
   cors <- cors %>% 
     pivot_longer(1:ncol(cors), names_to = "path", values_to = "value") %>% 
     group_by(path) %>% 
-    summarise(quant.025 = quantile(value, .025),
-              quant.25 = quantile(value, .25),
-              mean = mean(value),
-              quant.75 = quantile(value, .75),
-              quant.975 = quantile(value, .975),
-              prop_greater_0 = sum(value > 0)/n()) %>% 
+    summarise(quant.025 = round(quantile(value, .025), 2),
+              quant.25 = round(quantile(value, .25), 2),
+              mean = round(mean(value), 2),
+              quant.75 = round(quantile(value, .75), 2),
+              quant.975 = round(quantile(value, .975), 2),
+              prop_greater_0 = round(sum(value > 0)/n(), 2)) %>% 
     mutate(Model = models[i])
   
   if(i==1){
