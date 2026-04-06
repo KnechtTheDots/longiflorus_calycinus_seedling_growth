@@ -1,4 +1,4 @@
-# Seedling traits and hybrid fitness in *Mimulus aurantiacus* hybrids
+# Seedling traits and hybrid fitness in *Mimulus aurantiacus*
 This repository contains the analysis of genetic architecture for seedling traits and fitness of intra- and inter population crosses between the *Mimulus aurantiacus* subspecies *longiflorus* and *calycinus*.  
 
 The analysis can be run completely from scratch as detailed below:  
