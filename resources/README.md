@@ -29,7 +29,7 @@ contains information on traits and how they relate to fitness in a terminal drou
 
 **seed_growth_vs_seed_size.csv** with the following columns:  
 *id*: the id of each seed  
-*seed_size*: the size (area in mm$^{2}$) of each seed  
+*seed_size*: the size (area in mm<sup>2</sup>) of each seed  
 *germ_day*: the day (time since beginning the experiment) the seed germinated  
 *day_3-17*: size of seedling (area in mm^2) on each day measured during the experiment  
 *death_day*: day of death of each seedling in the drought trial (time since the beginning of the drought trial)  
