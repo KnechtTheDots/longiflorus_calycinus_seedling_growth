@@ -13,4 +13,6 @@ snakemake --cores 4 --software-deployment-method conda
 # for the command to work.
 ```  
 
-Snakemake will create the environment needed and execute the analysis pipeline. (n.b. generating the environment can take a little time (~10-15 minutes))
+Snakemake will create the environment needed and execute the analysis pipeline. (n.b. generating the environment can take a little time (~10-15 minutes)).  
+
+To play with the analysis, just modify the script you are interested in and re-run the above command and Snakemake will update the results that depend on your changes!
