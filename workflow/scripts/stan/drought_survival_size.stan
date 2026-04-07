@@ -24,39 +24,28 @@ transformed data{
   vector[n_short] age_max_std = (age_max - mean(age_max))/sd(age_max);
 }
 parameters{
-  matrix[2, n_short] Z; // relative growth rate of each individual
+  vector[n_short] z_rgr; // relative growth rate of each individual
+  vector[n_short] z_size_0;
   real gamma; // intercept of the seed size -> log_size_0 sub model
   real beta; // slope of the seed size -> log_size_0 sub model
-  vector<lower=0>[2] tau; // scales of rgr and log_size_0
+  real<lower=0> tau; // scales of rgr
+  real<lower=0> tau_size_0;
   real<lower=0> sig_m; // scale of log size
   real<lower=0> rgr_bar; // mean relative growth rate
-  cholesky_factor_corr[2] L_Omega; // cholesky factor of the correlation matrix between rgr and log_size_0
   real alpha_survive; // intercept of the survival logistic regression
   real beta_size_survive;
-  cholesky_factor_corr[3] L_R; // cholesky factor for correlations between rgr, final age and seed size
+  cholesky_factor_corr[4] L_R; // cholesky factor for correlations between rgr, final age and seed size
  }
 transformed parameters{
-  vector[n_short] log_size_0; // log(size_0) 
-  vector[n_short] rgr; // relative growth rate
-  {
-  matrix[2, n_short] Mu; // define matrix of means
-  matrix[2, n_short] Beta; // matrix carrying the log_size_0 and relative growth rate
-  for(i in 1:n_short){
-    Mu[1, i] = rgr_bar; 
-    Mu[2, i] = gamma + beta*seed_std[i];
-  }
-  Beta = Mu + diag_pre_multiply(tau, L_Omega) * Z;
-  rgr = Beta[1,]';
-  log_size_0 = Beta[2,]';
-  }
- vector[n_short] z_rgr = (rgr - rgr_bar)/tau[1]; 
+  vector[n_short] log_size_0 = gamma + beta*seed_std + z_size_0*tau_size_0; // log(size_0) 
+  vector[n_short] rgr = rgr_bar + z_rgr*tau; // relative growth rate
+
  // likelihood for survival
  vector[n_short] logit_p = alpha_survive + beta_size_survive * final_size_std;
 }
 model{
-  to_vector(Z) ~ normal(0, 1); // 95% ~ -2 <-> 2
   tau ~ exponential(1); // ~ .025 <-> 3.7
-  L_Omega ~ lkj_corr_cholesky(2); // mildly regularizing toward no correlation
+  tau_size_0 ~ exponential(1);
   beta ~ normal(0, 1); // ~ -2 <-> 2
   gamma ~ normal(0, 1); // ~ -2 <-> 2
   rgr_bar ~ normal(0, .25); // ~ -.5 <-> .5
@@ -65,15 +54,15 @@ model{
   beta_size_survive ~ normal(0, 1);
   L_R ~ lkj_corr_cholesky(2);
   
-  array[n_short] vector[3] phenos;
+  array[n_short] vector[4] phenos;
   for(i in 1:n_short){
-    phenos[i] = [z_rgr[id_short[i]], age_max_std[id_short[i]], seed_std[id_short[i]]]';
+    phenos[i] = [z_rgr[id_short[i]], age_max_std[id_short[i]], seed_std[id_short[i]], z_size_0[id_short[i]]]';
   }
   
   // mean = 0 and sd of each phenotype is on (they are standardized) so no
   // need to muliply the cholesky corr by the standard deviations because it 
   // would just return L_R anyway
-  phenos ~ multi_normal_cholesky([0,0,0]',L_R);
+  phenos ~ multi_normal_cholesky([0,0,0,0]',L_R);
 
   // mu = E(log_area | log_size, rgr, age)
   vector[n_long] mu = log_size_0[id_long] + rgr[id_long] .* age;
@@ -113,12 +102,12 @@ generated quantities{
   {
     // calculate the final size (standardized to the data's values) using the mean
     // standardized seed size (i.e. 0) and an age of 14
-    vector[n_pred] rgr_pred = rgr_bar + tau[1]*z_tilde;
+    vector[n_pred] rgr_pred = rgr_bar + tau*z_tilde;
     vector[n_pred] size_pred = exp(gamma + rgr_pred*14);
     vector[n_pred] z_size_pred = (size_pred - mu_final_size)/sd_final_size;
     p_pred = inv_logit(alpha_survive + beta_size_survive * z_size_pred);
   }
-  vector[n_pred] rgr_pred = rgr_bar + z_tilde * tau[1];
+  vector[n_pred] rgr_pred = rgr_bar + z_tilde * tau;
   
-  matrix[3,3] R_phenos = multiply_lower_tri_self_transpose(L_R);
+  matrix[4,4] R_phenos = multiply_lower_tri_self_transpose(L_R);
 }

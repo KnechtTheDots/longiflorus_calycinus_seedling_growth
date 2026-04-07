@@ -24,7 +24,7 @@ dat <- list(
   final_size = short$seedling_area,
   seed = short$seed_size,
   age_max = short$age,
-  z_tilde = seq(-3.5,1, l = 100)
+  z_tilde = seq(-4.5,1.5, l = 100)
 )
 
 for(i in 1:3){

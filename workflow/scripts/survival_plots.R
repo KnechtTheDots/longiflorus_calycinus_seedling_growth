@@ -53,7 +53,7 @@ for(i in 1:3){
   
   print("Data read in.")
   
-  z_tilde <- seq(-3.5,1,l=100)
+  z_tilde <- seq(-4.5,1.5,l=100)
   
   p <- fit$draws("p_pred", format = "df")[,1:length(z_tilde)]
   
