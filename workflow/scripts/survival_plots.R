@@ -101,6 +101,7 @@ for(i in 1:3){
   sigma_age <- sd(dat$age_max)
   sigma_seed <- sd(dat$seed)
   
+  
   w <- fit$draws("w", format = "df")[,1:nrow(short)]
   sigma_w <- fit$draws("sigma_w", format = "df")$sigma_w
   
