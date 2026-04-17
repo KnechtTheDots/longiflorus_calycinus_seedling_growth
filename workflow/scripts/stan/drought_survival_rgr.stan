@@ -24,44 +24,43 @@ transformed data{
   vector[n_short] age_max_std = (age_max - mean(age_max))/sd(age_max);
 }
 parameters{
-  vector[n_short] z_rgr; // relative growth rate of each individual
-  vector[n_short] z_size_0;
+  vector[n_short] rgr; // relative growth rate of each individual
+  vector[n_short] eta;
   real gamma; // intercept of the seed size -> log_size_0 sub model
   real beta; // slope of the seed size -> log_size_0 sub model
-  real<lower=0> tau; // scales of rgr and log_size_0
-  real<lower=0> tau_size_0;
+  vector<lower=0>[4] tau; // scales of rgr and log_size_0
   real<lower=0> sig_m; // scale of log size
   real<lower=0> rgr_bar; // mean relative growth rate
+  real<lower=0,upper=14> age_bar;
+  real<lower=0> seed_bar;
   real alpha_survive; // intercept of the survival logistic regression
   real beta_rgr_survive; // slope of the survival logistic regression or rgr
-  cholesky_factor_corr[4] L_R; // cholesky factor for correlations between rgr, final age and seed size
+  corr_matrix[4] R; // cholesky factor for correlations between rgr, final age and seed size
  }
 transformed parameters{
-  vector[n_short] log_size_0 = gamma + beta*seed_std + z_size_0*tau_size_0; // log(size_0) 
-  vector[n_short] rgr = rgr_bar + z_rgr*tau; // relative growth rate
-
- vector[n_short] logit_p = alpha_survive + beta_rgr_survive * z_rgr;
+  vector[n_short] log_size_0 = gamma + beta * (seed - seed_bar)/tau[3] + eta;
+  vector[n_short] z_rgr = (rgr - rgr_bar)/tau[1];
+  vector[n_short] logit_p = alpha_survive + beta_rgr_survive * z_rgr;
 }
 model{
   tau ~ exponential(1); // ~ .025 <-> 3.7
-  tau_size_0 ~ exponential(1);
   beta ~ normal(0, 1); // ~ -2 <-> 2
   gamma ~ normal(0, 1); // ~ -2 <-> 2
   rgr_bar ~ normal(0, .25); // ~ -.5 <-> .5
+  age_bar ~ normal(14, 4);
+  seed_bar ~ normal(0, 1);
   sig_m ~ exponential(1); // ~ .025 <-> 3.7
   alpha_survive ~ normal(0, 1);
   beta_rgr_survive ~ normal(0, 1);
-  L_R ~ lkj_corr_cholesky(2);
+  R ~ lkj_corr(2);
   
   array[n_short] vector[4] phenos;
   for(i in 1:n_short){
-    phenos[i] = [z_rgr[id_short[i]], age_max_std[id_short[i]], seed_std[id_short[i]], z_size_0[id_short[i]]]';
+    phenos[i] = [rgr[id_short[i]], age_max[id_short[i]], seed[id_short[i]], eta[id_short[i]]]';
   }
   
-  // mean = 0 and sd of each phenotype is on (they are standardized) so no
-  // need to muliply the cholesky corr by the standard deviations because it 
-  // would just return L_R anyway
-  phenos ~ multi_normal_cholesky([0,0,0,0]',L_R);
+  matrix[4,4] Sigma = quad_form_diag(R, tau);
+  phenos ~ multi_normal([rgr_bar, age_bar, seed_bar, 0]', Sigma);
   
   // mu = E(log_area | log_size, rgr, age)
   vector[n_long] mu = log_size_0[id_long] + rgr[id_long] .* age;
@@ -77,25 +76,19 @@ model{
 generated quantities{
   vector[n_short] log_lik;
   for(i in 1:n_short){
-    log_lik[i] = bernoulli_logit_lpmf(survive[i] | alpha_survive + 
-                                        beta_rgr_survive * z_rgr[i]);
+    log_lik[i] = bernoulli_logit_lpmf(survive[id_short[i]] | alpha_survive +
+                                        beta_rgr_survive * z_rgr[id_short[i]]);
   }
-  
-  
-  // recover the correlation matrix of log_size_0 and rgr from the cholesky decomposition
-  // don't need it for now but keep it commented so I remember later if I want it
-  //matrix[2,2] R = multiply_lower_tri_self_transpose(L_Omega);
-  
+
   // posterior predictive of size at the final age
   array[n_short] real y_rep = normal_rng(log_size_0[id_short] + rgr[id_short] .* age_max, sig_m);
   vector[n_short] final_rep = exp(to_vector(y_rep));
   array[n_short] int surv_rep = bernoulli_logit_rng(alpha_survive + beta_rgr_survive * z_rgr[id_short]);
-  
+
   vector[n_short] w = to_vector(surv_rep)/mean(to_vector(surv_rep));
   real sigma_w = sd(w);
-  
+
   // assume size is calculated at age 14
   vector[n_pred] p_pred = inv_logit(alpha_survive + beta_rgr_survive * z_tilde);
-  vector[n_pred] rgr_pred = rgr_bar + z_tilde * tau;
-  matrix[4,4] R_phenos = multiply_lower_tri_self_transpose(L_R);
+  vector[n_pred] rgr_pred = rgr_bar + z_tilde * tau[1];
 }

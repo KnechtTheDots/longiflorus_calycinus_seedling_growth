@@ -1,1 +1,1 @@
-stan files updated
+Stan files are up to date!

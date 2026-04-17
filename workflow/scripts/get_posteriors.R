@@ -157,9 +157,9 @@ for(i in 1:3){
   
   fit <- fits[[i]]
   
-  d <- fit$draws("R_phenos", format = "df")$`R_phenos[2,1]`
-  e <- fit$draws("R_phenos", format = "df")$`R_phenos[2,3]`
-  f <- fit$draws("R_phenos", format = "df")$`R_phenos[1,3]`
+  d <- fit$draws("R", format = "df")$`R[1,2]`
+  e <- fit$draws("R", format = "df")$`R[2,3]`
+  f <- fit$draws("R", format = "df")$`R[1,3]`
   
   rgr <- fit$draws("rgr", format = "df")[,1:nrow(short)]
   size <- fit$draws("final_rep", format = "df")[,1:nrow(short)]

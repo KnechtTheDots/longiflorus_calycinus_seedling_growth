@@ -88,9 +88,9 @@ for(i in 1:3){
   ## plot the correlations
   
   
-  d <- fit$draws("R_phenos", format = "df")$`R_phenos[2,1]`
-  e <- fit$draws("R_phenos", format = "df")$`R_phenos[2,3]`
-  f <- fit$draws("R_phenos", format = "df")$`R_phenos[1,3]`
+  d <- fit$draws("R", format = "df")$`R[1,2]`
+  e <- fit$draws("R", format = "df")$`R[2,3]`
+  f <- fit$draws("R", format = "df")$`R[1,3]`
   
   rgr <- fit$draws("rgr", format = "df")[,1:nrow(short)]
   sigma_rgr <- apply(rgr, 1, sd)
@@ -135,10 +135,10 @@ for(i in 1:3){
   # multiply the isolated correlations by the standard deviation for fitness
   # to get the standardized selection differentials
   selection_grads <- data.frame(
-    RGR = (cors$h + cors$a * cors$g) * sigma_w,
-    Size = (cors$g) * sigma_w,
-    Age = (cors$b * cors$g) * sigma_w,
-    SeedSize = (cors$c * cors$g) * sigma_w
+    RGR = (cors$h + cors$a * cors$g),# * sigma_w,
+    Size = (cors$g),# * sigma_w,
+    Age = (cors$b * cors$g),# * sigma_w,
+    SeedSize = (cors$c * cors$g)# * sigma_w
   )
   
   path_coefs[[i]] <- selection_grads %>% 
@@ -192,11 +192,12 @@ for(i in 1:3){
     paths <- paths[paths$variables != "g",]
   }
   
-  mods[[i]] <- data.frame(variable = c("w", "Size", "RGR", "Age","SeedSize"),
-             x = c(0, 0, -1, 0, 1),
-             y = c(1, 0, -1, -1, -1)) %>% 
+  mods[[i]] <- data.frame(variable = c("Size", "RGR", "Age","SeedSize"),
+             x = c(0, -1, 0, 1),
+             y = c(0, -1, -1, -1)) %>% 
     ggplot(aes(x = x, y = y, label = variable)) +
-    geom_text(fontface = "bold") +
+    geom_text(fontface = "bold", size = 8) +
+    geom_text(x = 0, y = 1, label = expression(omega), inherit.aes = F, size = 9) +
     geom_segment(data = to_survive, mapping = aes(x = x, y = y,
                                                   xend = xend, yend = yend),
                  linewidth = .75,
@@ -213,7 +214,8 @@ for(i in 1:3){
                linewidth = .75,
                arrow = arrow(length = unit(0.03, "npc"), ends = "both"),
                inherit.aes = F) +
-    geom_text(data = paths, mapping = aes(x = x, y = y, label = variables), inherit.aes = F) +
+    geom_text(data = paths, mapping = aes(x = x, y = y, label = variables),
+              size = 6, inherit.aes = F) +
     ylim(-1.5,1) + 
     xlim(-1.05,1.1) +
     theme(axis.title = element_blank(),
@@ -226,6 +228,7 @@ for(i in 1:3){
 
 print("Path plots made")
 
+ggsave("report/plots/path_model.jpg", mods[[3]], device = "jpg", width = 12, height = 8)
 
 # plot size, rgr, size-rgr
 final_plot <- plot_grid(plots[[1]], plots[[2]], plots[[3]], 

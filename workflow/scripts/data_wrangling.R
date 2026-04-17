@@ -67,7 +67,7 @@ d <- d %>%
 # and by making height numeric, the dead individuals will be represented as NAs
 
 d <- d %>% 
-  drop_na(day_17) %>% 
+  drop_na(day_17) %>%
   mutate(height = as.numeric(height),
          survive = ifelse(is.na(height), 0, 1)) %>% 
          select(line, day_4, day_17, height, survive, cross)
