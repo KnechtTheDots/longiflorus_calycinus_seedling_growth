@@ -3,15 +3,15 @@
 # for them and executes the workflow
 rule target:
     input:
-        panel="report/plots/survival_mod_panel.svg",
-        epi="report/plots/epi_test/epi.svg",
-        obs="report/plots/epi_test/obs.svg",
-        mean_diffs="report/plots/epi_test/mean_diffs.svg",
+        panel="report/plots/survival_mod_panel.png",
+        epi="report/plots/epi.png",
+        obs="report/plots/obs.png",
+        mean_diffs="report/plots/mean_diffs.png",
         traits="report/posteriors/traits.csv",
         betas="report/posteriors/betas.csv",
         diffs="report/posteriors/diffs.csv",
         corrs="report/posteriors/corrs.csv",
-        ppc="report/plots/post_pred/ppc.svg"
+        ppc="report/plots/ppc.png"
 
 # this rule takes the files from data collectio and creates the set 
 # of files that will be used for the analysis
@@ -84,7 +84,7 @@ rule post_pred_checks:
         fit="results/drought_survival_rgr.RDS",
         short="results/wrangled/drought_short.csv"
     output:
-        "report/plots/post_pred/ppc.svg"
+        "report/plots/ppc.png"
     log:
         log="results/logs/post_pred_checks.log"
     conda:
@@ -102,8 +102,8 @@ rule survival_plots:
         short="results/wrangled/drought_short.csv",
         long="results/wrangled/drought_long.csv"
     output:
-        panel="report/plots/survival_mod_panel.svg",
-        comb_only="report/plots/survival_combined_mod.svg"
+        panel="report/plots/survival_mod_panel.png",
+        comb_only="report/plots/survival_combined_mod.png"
     log:
         log="results/logs/survival_plots.log"
     conda:
@@ -140,9 +140,9 @@ rule epi_plots:
         height="results/trait_boots/height.csv",
         traits="results/wrangled/traits.csv"
     output:
-        epi="report/plots/epi_test/epi.svg",
-        obs="report/plots/epi_test/obs.svg",
-        mean_diffs="report/plots/epi_test/mean_diffs.svg"
+        epi="report/plots/epi.png",
+        obs="report/plots/obs.png",
+        mean_diffs="report/plots/mean_diffs.png"
     log:
         log="results/logs/epi_plots.log"
     conda:
@@ -165,13 +165,32 @@ rule get_posterior:
         short="results/wrangled/drought_short.csv",
         long="results/wrangled/drought_long.csv"
     output:
-        traits="report/posteriors/traits.csv",
-        betas="report/posteriors/betas.csv",
-        diffs="report/posteriors/diffs.csv",
-        corrs="report/posteriors/corrs.csv"
+        traits="results/posteriors/traits.csv",
+        betas="results/posteriors/betas.csv",
+        diffs="results/posteriors/diffs.csv",
+        corrs="results/posteriors/corrs.csv"
     log:
         log="results/logs/get_posteriors.log"
     conda:
         "envs/environment.yaml"
     script:
         "scripts/get_posteriors.R"
+
+# this rule takes the csv's and alters them so that they can be made easily into latex tables
+rule csv2table:
+    input:
+        traits="results/posteriors/traits.csv",
+        betas="results/posteriors/betas.csv",
+        diffs="results/posteriors/diffs.csv",
+        corrs="results/posteriors/corrs.csv"
+    output:
+        traits="report/posteriors/traits.csv",
+        betas="report/posteriors/betas.csv",
+        diffs="report/posteriors/diffs.csv",
+        corrs="report/posteriors/corrs.csv"
+    log:
+        log="results/logs/csv2table.log"
+    conda:
+        "envs/environment.yaml"
+    script:
+        "scripts/csv2table.R"

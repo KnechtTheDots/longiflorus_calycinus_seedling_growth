@@ -1,0 +1,7 @@
+channels:
+-   conda-forge
+-   R
+-   nodefaults
+dependencies:
+-   pdflatex=0.1.3
+-   

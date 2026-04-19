@@ -197,7 +197,7 @@ for(i in 1:3){
              y = c(0, -1, -1, -1)) %>% 
     ggplot(aes(x = x, y = y, label = variable)) +
     geom_text(fontface = "bold", size = 8) +
-    geom_text(x = 0, y = 1, label = expression(omega), inherit.aes = F, size = 9) +
+    geom_text(x = 0, y = 1, label = expression(omega), inherit.aes = F, size = 10) +
     geom_segment(data = to_survive, mapping = aes(x = x, y = y,
                                                   xend = xend, yend = yend),
                  linewidth = .75,
@@ -228,7 +228,7 @@ for(i in 1:3){
 
 print("Path plots made")
 
-ggsave("report/plots/path_model.jpg", mods[[3]], device = "jpg", width = 12, height = 8)
+ggsave("report/plots/path_model.png", mods[[3]], device = "png", width = 12, height = 8)
 
 # plot size, rgr, size-rgr
 final_plot <- plot_grid(plots[[1]], plots[[2]], plots[[3]], 
@@ -237,11 +237,11 @@ final_plot <- plot_grid(plots[[1]], plots[[2]], plots[[3]],
 
 print("final plot made")
 
-ggsave(snakemake@output[[1]], final_plot, device = "svg", width = 12, height = 8)
+ggsave(snakemake@output[[1]], final_plot, device = "png", width = 12, height = 8)
 
 combined_model_plot <- plot_grid(plots[[3]], mods[[3]], path_coefs[[3]], ncol = 1, labels = "AUTO")
 
-ggsave(snakemake@output[[2]], combined_model_plot, device = "svg", width = 8, height = 15)
+ggsave(snakemake@output[[2]], combined_model_plot, device = "png", width = 8, height = 15)
 
 
 print("All plots made")

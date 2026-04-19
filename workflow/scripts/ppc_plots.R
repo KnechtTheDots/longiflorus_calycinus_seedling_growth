@@ -92,7 +92,7 @@ grid <- plot_grid(obs_v_pred, dens_plot, mu_hist, sd_hist,
           min_hist, max_hist, rhat_bulk, rhat_tail,
           ncol = 4, labels = "AUTO")
 
-ggsave(snakemake@output[[1]], grid, device = "svg", width = 12, height = 8)
+ggsave(snakemake@output[[1]], grid, device = "png", width = 12, height = 8)
 
 
 on.exit(sink())

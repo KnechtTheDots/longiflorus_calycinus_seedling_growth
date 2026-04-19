@@ -24,8 +24,9 @@ transformed data{
   vector[n_short] age_max_std = (age_max - mean(age_max))/sd(age_max);
 }
 parameters{
-  vector[n_short] rgr;
-  vector[n_short] eta;
+  // vector[n_short] rgr;
+  // vector[n_short] eta;
+  matrix[4,n_short] Z;
   real gamma; // intercept of the seed size -> log_size_0 sub model
   real beta; // slope of the seed size -> log_size_0 sub model
   vector<lower=0>[4] tau; // scales of rgr, age, and seed size
@@ -36,16 +37,24 @@ parameters{
   real alpha_survive; // intercept of the survival logistic regression
   real beta_rgr_survive; // slope of the survival logistic regression or rgr
   real beta_size_survive;
-  corr_matrix[4] R; // cholesky factor for correlations between rgr, final age and seed size
+  cholesky_factor_corr[4] L_R; // cholesky factor for correlations between rgr, final age and seed size
  }
 transformed parameters{
-  vector[n_short] log_size_0 = gamma + beta* (seed - seed_bar)/tau[3] + eta;
-  vector[n_short] z_rgr = (rgr - rgr_bar)/tau[1];
+  // vector[n_short] log_size_0 = gamma + beta* (seed - seed_bar)/tau[3] + eta;
+  // vector[n_short] z_rgr = (rgr - rgr_bar)/tau[1];
+  matrix[4,n_short] phenos;
+  for(i in 1:n_short){
+    phenos[,i] = [rgr_bar, age_bar, seed_bar, gamma + beta*seed_std[i]]' + diag_pre_multiply(tau,L_R) * Z[,i];
+  }
+  vector[n_short] rgr = phenos[1,]';
+  vector[n_short] log_size_0 = phenos[4,]';
+  vector[n_short] z_rgr = Z[1,]';
  // likelihood for survival
   vector[n_short] logit_p = alpha_survive + beta_rgr_survive * z_rgr +
                                             beta_size_survive * final_size_std;
 }
 model{
+  to_vector(Z) ~ normal(0,1);
   tau ~ exponential(1); // ~ .025 <-> 3.7
   beta ~ normal(0, 1); // ~ -2 <-> 2
   gamma ~ normal(0, 1); // ~ -2 <-> 2
@@ -56,15 +65,20 @@ model{
   alpha_survive ~ normal(0, 1); // ~ -2 <-> 2 
   beta_rgr_survive ~ normal(0, 1); // ~ -2 <-> 2
   beta_size_survive ~ normal(0, 1); // ~ -2 <-> 2
-  R ~ lkj_corr(2); // weakly regularizing with correlations ~ -.7 <-> .7 
+  L_R ~ lkj_corr_cholesky(2);
   
-  array[n_short] vector[4] phenos;
-  for(i in 1:n_short){
-    phenos[i] = [rgr[id_short[i]], age_max[id_short[i]], seed[id_short[i]], eta[id_short[i]]]';
-  }
   
-  matrix[4,4] Sigma = quad_form_diag(R, tau);
-  phenos ~ multi_normal([rgr_bar, age_bar, seed_bar, 0]', Sigma);
+  age_max ~ normal(phenos[2,]', tau[2]);
+  seed ~ normal(phenos[3,]', tau[3]);
+  //R ~ lkj_corr(2); // weakly regularizing with correlations ~ -.7 <-> .7 
+  
+  // array[n_short] vector[4] phenos;
+  // for(i in 1:n_short){
+  //   phenos[i] = [rgr[id_short[i]], age_max[id_short[i]], seed[id_short[i]], eta[id_short[i]]]';
+  // }
+  // 
+  // matrix[4,4] Sigma = quad_form_diag(R, tau);
+  // phenos ~ multi_normal([rgr_bar, age_bar, seed_bar, 0]', Sigma);
   
   // mu = E(log_area | log_size, rgr, age)
   vector[n_long] mu = log_size_0[id_long] + rgr[id_long] .* age;
@@ -115,4 +129,5 @@ generated quantities{
 
 
   vector[n_pred] rgr_pred = rgr_bar + z_tilde * tau[1];
+  corr_matrix[4] R = multiply_lower_tri_self_transpose(L_R);
 }
