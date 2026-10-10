@@ -10,7 +10,7 @@ library(tidyr)
 library(ggbeeswarm)
 library(cowplot)
 
-this_theme <- theme(axis.title = element_text(size = 10, face = "bold"),
+this_theme <- theme(axis.title = element_text(size = 13, face = "bold"),
                     axis.text = element_text(face = "bold"))
 
 
@@ -25,12 +25,12 @@ plot_epi_test <- function(df, trait_id){
               upr.5 = quantile(trait, .75),
               lwr.5 = quantile(trait, .25)) %>% 
     mutate(group = c(1,2,3,4,1),
-           prop_lon = c(0, .5, .48, .52, 1)) %>% 
+           prop_lon = c(0, .5, .47, .53, 1)) %>% 
     ggplot(aes(x = prop_lon, y = mu, color = line, group = group)) +
     geom_line(color = "black", linewidth = 1) +
     geom_errorbar(aes(x = prop_lon, ymax = upr, ymin = lwr), linewidth = 1, width = 0) +
     geom_errorbar(aes(x = prop_lon, ymax = upr.5, ymin = lwr.5),
-                  linewidth = 1.5, width= 0) +
+                  linewidth = 1.75, width= 0) +
     labs(x = "Proportion Longiflorus",
          y = trait_id) +
     scale_color_manual(values = c("black", "red", "black", "blue", "black")) +
@@ -88,58 +88,109 @@ delta_f2 <- data.frame(Survive = delta(surv$f2, surv$f1, surv$lon, surv$cal)/sur
   geom_hline(yintercept = 0, color = "grey") +
   geom_errorbar(aes(x = Trait, ymax = upr, ymin = lwr), width = 0, linewidth = 1) +
   geom_errorbar(aes(x = Trait, ymax = upr.5, ymin = lwr.5), width = 0,
-                linewidth = 1.5) +
+                linewidth = 1.75) +
   geom_text(aes(x = Trait, y = prop_place, label = prop),
             fontface = "bold") +
   labs(y = expression(Delta/E(F[2])),
        x = "") +
   theme_minimal() +
-  theme(axis.text.x = element_text(size = 12, face = "bold"),
+  theme(axis.text.x = element_text(size = 12, face = "bold", vjust = -3),
         axis.text.y = element_text(size = 12, face = "bold"),
-        axis.title.y = element_text(face = "bold"))
+        axis.title.y = element_text(size = 15, face = "bold"))
 
 
 
 grid <- plot_grid(p_surv, p_d4, p_d17, p_rgr, p_height, delta_f2, ncol = 3, labels = "AUTO")
 
-ggsave(snakemake@output[['epi']], grid, device = "svg", width = 12, height = 8)
+ggsave(snakemake@output[['epi']], grid, device = "png", width = 12, height = 8)
 
+
+this_theme <- theme(axis.title = element_text(size = 13, face = "bold"),
+                    axis.text = element_text(face = "bold"))
 
 d <- read.csv(snakemake@input[['traits']])
 
 d$rgr <- (log(d$day_17) - log(d$day_4))/(17-4)
 
+# get sample sizes for day for to plot
+n4 <- d %>% 
+  drop_na(day_4) %>% 
+  group_by(line) %>% 
+  summarise(n = n()) %>% 
+  ungroup()
+
+# height of the sample size labels
+n4$lab_y <- max(d$day_4, na.rm = T) + .25
+
 d4 <- d %>% 
   ggplot(aes(x = line, y = day_4)) +
   geom_beeswarm() +
   theme_minimal() +
+  geom_text(data = n4, aes(x = line, y = lab_y, label = n),
+            fontface = "bold") +
   labs(x = "",
        y = "Area Day 4") +
   this_theme +
   theme(axis.text.x = element_text(size = 12, face = "bold"))
 
+# get sample sizes for day for to plot
+n17 <- d %>%
+  drop_na(day_17) %>%
+  group_by(line) %>%
+  summarise(n = n()) %>%
+  ungroup()
+
+# height of the sample size labels
+n17$lab_y <- max(d$day_17, na.rm = T) + 5
+
 d17 <- d %>% 
   ggplot(aes(x = line, y = day_17)) +
   geom_beeswarm() +
   theme_minimal() +
+  geom_text(data = n17, aes(x = line, y = lab_y, label = n),
+            fontface = "bold") +
   labs(x = "",
        y = "Area Day 17") +
   this_theme +
   theme(axis.text.x = element_text(size = 12, face = "bold"))
 
+# get sample sizes to plot
+nrgr <- d %>%
+    drop_na(rgr) %>%
+    group_by(line) %>%
+    summarise(n = n()) %>%
+    ungroup()
+
+# height of the sample size labels
+nrgr$lab_y <- max(d$rgr, na.rm = T) + .025
+  
 drgr <- d %>% 
   ggplot(aes(x = line, y = rgr)) +
   geom_beeswarm() +
   theme_minimal() +
+  geom_text(data = nrgr, aes(x = line, y = lab_y, label = n),
+            fontface = "bold") +
   labs(x = "",
        y = "Relative Growth Rate") +
   this_theme +
   theme(axis.text.x = element_text(size = 12, face = "bold"))
 
+# get sample sizes for day for to plot
+nheight <- d %>%
+  drop_na(height) %>%
+  group_by(line) %>%
+  summarise(n = n()) %>%
+  ungroup()
+
+# height of the sample size labels
+nheight$lab_y <- max(d$height, na.rm = T) + 2.5
+
 dheight <- d %>% 
   ggplot(aes(x = line, y = height)) +
   geom_beeswarm() +
   theme_minimal() +
+  geom_text(data = nheight, aes(x = line, y = lab_y, label = n),
+            fontface = "bold") +
   labs(x = "",
        y = "Height") +
   this_theme +
@@ -147,10 +198,11 @@ dheight <- d %>%
 
 
 grid <- plot_grid(d4, d17, drgr, dheight, ncol = 2, labels = "AUTO")
-ggsave(snakemake@output[['obs']], grid, device = "svg", width = 12, height = 8)
+ggsave(snakemake@output[['obs']], grid, device = "png", width = 12, height = 8)
 
 
-
+this_theme <- theme(axis.title = element_text(size = 12, face = "bold"),
+                    axis.text = element_text(face = "bold"))
 
 mean_diffs <- function(df, trait){
   data.frame("F2-F1" = df$f2 - df$f1,
@@ -181,7 +233,7 @@ mean_diffs <- function(df, trait){
     ggplot(y = comp, x = mu) +
     geom_vline(xintercept = 0, color = "grey") +
     geom_errorbarh(aes(y = comp, xmax = upr, xmin = lwr), height = 0, linewidth = 1) +
-    geom_errorbarh(aes(y = comp, xmax = upr.5, xmin = lwr.5), height = 0, linewidth = 1.5) +
+    geom_errorbarh(aes(y = comp, xmax = upr.5, xmin = lwr.5), height = 0, linewidth = 1.75) +
     geom_text(aes(x = prop_place, y = comp, label = prop),
               fontface = "bold") +
     labs(y = "",
@@ -197,10 +249,15 @@ diff_d17 <- mean_diffs(day_17, "Size on Day 17")
 diff_rgr <- mean_diffs(rgr, "RGR")
 diff_height <- mean_diffs(height, "Height on Day 122")
 
-grid <- plot_grid(diff_surv, diff_d4, diff_d17, diff_rgr, diff_height, labels = "AUTO",
-          ncol = 3)
+top_row <- plot_grid(diff_surv, diff_d4, diff_d17,
+                     labels = c("A", "B", "C"), ncol = 3)
+bottom_row <- plot_grid(diff_rgr, diff_height, labels = c("D", "E"), ncol = 2)
 
-ggsave(snakemake@output[['mean_diffs']], grid, device = "svg", width = 12, height = 8)
+grid <- plot_grid(top_row, bottom_row, ncol = 1)
+
+#grid <- plot_grid(diff_surv, diff_d4, diff_d17, diff_rgr, diff_height, labels = "AUTO", ncol = 3)
+
+ggsave(snakemake@output[['mean_diffs']], grid, device = "png", width = 12, height = 8)
 
 
 

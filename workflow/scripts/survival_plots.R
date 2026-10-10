@@ -19,8 +19,7 @@ get_cors <- function(r_rgr_size, r_age_size, r_seed_size, d, e, f){
   return(data.frame(a, b, c, d, e, f))
 }
 
-this_theme <- theme(axis.title = element_text(size = 12, face = "bold"),
-                    axis.text = element_text(face = "bold"))
+
 
 get_quant <- function(x, quant){
   as.numeric(apply(x, 2, function(z) quantile(z, quant)))
@@ -63,6 +62,8 @@ for(i in 1:3){
   
   mu_rgr <- apply(rgr_est, 2, mean)
   
+  n_samp <- data.frame(x = -3, y = 1, label = paste0("n = ",length(mu_rgr)))
+  
   rgr_surv <- data.frame(z_rgr = mu_rgr, survive = short$survive)
   
   plots[[i]] <- p %>% 
@@ -79,18 +80,22 @@ for(i in 1:3){
     geom_ribbon(aes(x = z_rgr, ymax = upr, ymin = lwr), alpha = .25) +
     geom_ribbon(aes(x = z_rgr, ymax = upr.5, ymin = lwr.5), alpha = .25) +
     geom_jitter(data = rgr_surv, aes(x = z_rgr, y = survive), width = 0, height = .01) +
+    geom_text(data = n_samp, aes(x = x, y = y, label = label),
+              size = 6,
+              fontface = "bold") +
     labs(x = "Standardized RGR",
          y = "Survival Probability") +
     theme_minimal() +
-    this_theme
+    theme(axis.title = element_text(size = 16, face = "bold"),
+          axis.text = element_text(size = 12, face = "bold"))
   
   
   ## plot the correlations
   
   
-  d <- fit$draws("R", format = "df")$`R[1,2]`
-  e <- fit$draws("R", format = "df")$`R[2,3]`
-  f <- fit$draws("R", format = "df")$`R[1,3]`
+  # d <- fit$draws("R", format = "df")$`R[1,2]`
+  # e <- fit$draws("R", format = "df")$`R[2,3]`
+  # f <- fit$draws("R", format = "df")$`R[1,3]`
   
   rgr <- fit$draws("rgr", format = "df")[,1:nrow(short)]
   sigma_rgr <- apply(rgr, 1, sd)
@@ -103,42 +108,108 @@ for(i in 1:3){
   
   
   w <- fit$draws("w", format = "df")[,1:nrow(short)]
-  sigma_w <- fit$draws("sigma_w", format = "df")$sigma_w
+  sigma_w <- apply(w, 1, sd)
   
-  r_rgr_size <- r_age_size <- r_seed_size <- r_rgr_w <- r_size_w <- c()
-  for(j in 1:nrow(rgr)){
-    r_rgr_size[j] <- cor(as.numeric(rgr[j,]), as.numeric(size[j,]))
-    r_age_size[j] <- cor(age, as.numeric(size[j,]))
-    r_seed_size[j] <- cor(seed, as.numeric(size[j,]))
-    r_rgr_w[j] <- cor(as.numeric(rgr[j,]), as.integer(w[j,]))
-    r_size_w[j] <- cor(as.numeric(size[j,]), as.integer(w[j,]))
-  }
+
+  age <- (age - mean(age))/sd(age)
+  seed <- (seed - mean(seed))/sd(seed)
   
-  cors <- get_cors(r_rgr_size, r_age_size, r_seed_size, d, e, f)
+  
+  
+  
+  # r_rgr_size <- r_age_size <- r_seed_size <- r_rgr_surv <- r_size_surv <- c()
+  # for(j in 1:nrow(rgr)){
+  #   r_rgr_size[j] <- cor(as.numeric(rgr[j,]), as.numeric(size[j,]))
+  #   r_age_size[j] <- cor(age, as.numeric(size[j,]))
+  #   r_seed_size[j] <- cor(seed, as.numeric(size[j,]))
+  #   r_rgr_surv[j] <- cor(as.numeric(rgr[j,]), as.numeric(w[j,]))
+  #   r_size_surv[j] <- cor(as.numeric(size[j,]), as.numeric(w[j,]))
+  # }
+  # 
+  # cors <- get_cors(r_rgr_size, r_age_size, r_seed_size, d, e, f)
   
   if(i==1){
-    cors$g <- r_size_w
-    cors$h <- 0
+    # cors$g <- r_size_surv
+    # cors$h <- 0
+    # cors$rgr_total <- cors$a * cors$g
+    
+    a <- b <- c <- h <- g <- c()
+    for(j in 1:nrow(rgr)){
+      std <- as.numeric(size[j,])
+      std <- (std-mean(std))/sd(std)
+      rtd <- as.numeric(rgr[j,])
+      rtd <- (rtd - mean(rtd))/sd(rtd)
+      wtd <- as.numeric(w[j,])
+      wtd <- (wtd - mean(wtd))/sd(wtd)
+      p_s <- as.numeric(coef(lm(std ~ rtd + age + seed)))
+      a[j] <- p_s[2]
+      b[j] <- p_s[3]
+      c[j] <- p_s[4]
+      p_w <- as.numeric(coef(lm(wtd ~ std)))
+      g[j] <- p_w[2]
+      h[j] <- 0
+    }
+    cors <- data.frame(a,b,c,g,h)
   }
   
   if(i==2){
-    cors$g <- 0
-    cors$h <- r_rgr_w
+    # cors$g <- 0
+    # cors$h <- r_rgr_surv
+    # cors$rgr_total <- cors$h
+    
+    a <- b <- c <- h <- g <- c()
+    for(j in 1:nrow(rgr)){
+      std <- as.numeric(size[j,])
+      std <- (std-mean(std))/sd(std)
+      rtd <- as.numeric(rgr[j,])
+      rtd <- (rtd - mean(rtd))/sd(rtd)
+      wtd <- as.numeric(w[j,])
+      wtd <- (wtd - mean(wtd))/sd(wtd)
+      p_s <- as.numeric(coef(lm(std ~ rtd + age + seed)))
+      a[j] <- p_s[2]
+      b[j] <- p_s[3]
+      c[j] <- p_s[4]
+      p_w <- as.numeric(coef(lm(wtd ~ rtd)))
+      g[j] <- 0
+      h[j] <- p_w[2]
+    }
+    
+    cors <- data.frame(a,b,c,g,h)
   }
   
   if(i==3){
-    cors$g <- (r_size_w - r_rgr_size*r_rgr_w)/(1 - r_rgr_size^2)
+    # cors$g <- (r_size_surv - r_rgr_size*r_rgr_surv)/(1 - r_rgr_size^2)
+    # 
+    # cors$h <- r_rgr_surv - cors$g*r_rgr_size
+    # 
+    # cors$rgr_total <- cors$h + cors$a * cors$g
     
-    cors$h <- r_rgr_w - cors$g*r_rgr_size
+    a <- b <- c <- h <- g <- c()
+    for(j in 1:nrow(rgr)){
+      std <- as.numeric(size[j,])
+      std <- (std-mean(std))/sd(std)
+      rtd <- as.numeric(rgr[j,])
+      rtd <- (rtd - mean(rtd))/sd(rtd)
+      wtd <- as.numeric(w[j,])
+      wtd <- (wtd - mean(wtd))/sd(wtd)
+      p_s <- as.numeric(coef(lm(std ~ rtd + age + seed)))
+      a[j] <- p_s[2]
+      b[j] <- p_s[3]
+      c[j] <- p_s[4]
+      p_w <- as.numeric(coef(lm(wtd ~ rtd + std)))
+      g[j] <- p_w[3]
+      h[j] <- p_w[2]
+    }
+    cors <- data.frame(a,b,c,g,h)
   }
   
   # multiply the isolated correlations by the standard deviation for fitness
   # to get the standardized selection differentials
   selection_grads <- data.frame(
-    RGR = (cors$h + cors$a * cors$g),# * sigma_w,
-    Size = (cors$g),# * sigma_w,
-    Age = (cors$b * cors$g),# * sigma_w,
-    SeedSize = (cors$c * cors$g)# * sigma_w
+    RGR = (cors$h + cors$a * cors$g)*sigma_w,
+    Size = (cors$g)*sigma_w,
+    Age = (cors$b * cors$g)*sigma_w,
+    SeedSize = (cors$c * cors$g)*sigma_w
   )
   
   path_coefs[[i]] <- selection_grads %>% 
@@ -155,15 +226,15 @@ for(i in 1:3){
     geom_errorbar(aes(x = path, ymin = lwr, ymax = upr),
                    width = 0, linewidth = .75) +
     geom_errorbar(aes(x = path, ymin = lwr.5, ymax = upr.5),
-                   width = 0, linewidth = 1.5) +
+                   width = 0, linewidth = 1.75) +
     labs(y = "Selection Gradient") +
     #ylim(-.12, .6) +
     theme_minimal() +
-    theme(axis.title.x = element_blank()) +
-    this_theme
+    theme(axis.title.x = element_blank(),
+          axis.text.x = element_text(size = 16, face = "bold"),
+          axis.title.y = element_text(size = 15, face = "bold"),
+          axis.text.y = element_text(size = 12, face = "bold"))
   
-  
-
   
 }
 
@@ -180,7 +251,7 @@ for(i in 1:3){
   
   paths <- data.frame(variables = letters[1:8],
                       x = c(-.5, .05, .5, -.5, .5, 0, .05, -.5),
-                      y = c(-.55, -.55, -.55, -1.1, -1.1, -1.4, .3, .3))
+                      y = c(-.55, -.55, -.55, -1.1, -1.1, -1.27, .3, .3))
   
   if(i==1){
     to_survive <- to_survive[2,]
@@ -196,8 +267,8 @@ for(i in 1:3){
              x = c(0, -1, 0, 1),
              y = c(0, -1, -1, -1)) %>% 
     ggplot(aes(x = x, y = y, label = variable)) +
-    geom_text(fontface = "bold", size = 8) +
-    geom_text(x = 0, y = 1, label = expression(omega), inherit.aes = F, size = 10) +
+    geom_text(fontface = "bold", size = 6) +
+    geom_text(x = 0, y = 1, label = expression(omega), inherit.aes = F, size = 8) +
     geom_segment(data = to_survive, mapping = aes(x = x, y = y,
                                                   xend = xend, yend = yend),
                  linewidth = .75,
@@ -215,7 +286,7 @@ for(i in 1:3){
                arrow = arrow(length = unit(0.03, "npc"), ends = "both"),
                inherit.aes = F) +
     geom_text(data = paths, mapping = aes(x = x, y = y, label = variables),
-              size = 6, inherit.aes = F) +
+               size = 6, inherit.aes = F) +
     ylim(-1.5,1) + 
     xlim(-1.05,1.1) +
     theme(axis.title = element_blank(),
@@ -228,7 +299,7 @@ for(i in 1:3){
 
 print("Path plots made")
 
-ggsave("report/plots/path_model.png", mods[[3]], device = "png", width = 12, height = 8)
+ggsave("results/plots/path_model.png", mods[[3]], device = "png", width = 12, height = 8)
 
 # plot size, rgr, size-rgr
 final_plot <- plot_grid(plots[[1]], plots[[2]], plots[[3]], 
@@ -239,9 +310,15 @@ print("final plot made")
 
 ggsave(snakemake@output[[1]], final_plot, device = "png", width = 12, height = 8)
 
-combined_model_plot <- plot_grid(plots[[3]], mods[[3]], path_coefs[[3]], ncol = 1, labels = "AUTO")
+top_grid <- plot_grid(plots[[3]], path_coefs[[3]],
+                      ncol = 2, labels = c("A", "B"), rel_widths = c(1,1))
+bottom_grid <- plot_grid(NULL, mods[[3]], NULL, nrow = 1, labels = c(""<"C","", rel_widths = c(.5, 1, .5)))
 
-ggsave(snakemake@output[[2]], combined_model_plot, device = "png", width = 8, height = 15)
+combined_model_plot <- plot_grid(top_grid, bottom_grid,
+                                 nrow = 2, align = "hv")
+#combined_model_plot <- plot_grid(plots[[3]], mods[[3]], path_coefs[[3]], ncol = 3, labels = "AUTO")
+
+ggsave(snakemake@output[[2]], combined_model_plot, device = "png", width = 18, height = 6)
 
 
 print("All plots made")

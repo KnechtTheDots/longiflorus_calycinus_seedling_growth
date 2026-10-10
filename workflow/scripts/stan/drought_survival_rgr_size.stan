@@ -26,28 +26,28 @@ transformed data{
 parameters{
   // vector[n_short] rgr;
   // vector[n_short] eta;
-  matrix[4,n_short] Z;
+  matrix[2,n_short] Z;
   real gamma; // intercept of the seed size -> log_size_0 sub model
   real beta; // slope of the seed size -> log_size_0 sub model
-  vector<lower=0>[4] tau; // scales of rgr, age, and seed size
+  vector<lower=0>[2] tau; // scales of rgr, age, and seed size
   real<lower=0> sig_m; // scale of log size
   real<lower=0> rgr_bar; // mean relative growth rate
-  real<lower=0,upper=14> age_bar;
-  real<lower=0> seed_bar;
+  // real<lower=0,upper=14> age_bar;
+  // real<lower=0> seed_bar;
   real alpha_survive; // intercept of the survival logistic regression
   real beta_rgr_survive; // slope of the survival logistic regression or rgr
   real beta_size_survive;
-  cholesky_factor_corr[4] L_R; // cholesky factor for correlations between rgr, final age and seed size
+  cholesky_factor_corr[2] L_R; // cholesky factor for correlations between rgr, final age and seed size
  }
 transformed parameters{
   // vector[n_short] log_size_0 = gamma + beta* (seed - seed_bar)/tau[3] + eta;
   // vector[n_short] z_rgr = (rgr - rgr_bar)/tau[1];
-  matrix[4,n_short] phenos;
+  matrix[2,n_short] phenos;
   for(i in 1:n_short){
-    phenos[,i] = [rgr_bar, age_bar, seed_bar, gamma + beta*seed_std[i]]' + diag_pre_multiply(tau,L_R) * Z[,i];
+    phenos[,i] = [rgr_bar, gamma + beta*seed_std[i]]' + diag_pre_multiply(tau,L_R) * Z[,i];
   }
   vector[n_short] rgr = phenos[1,]';
-  vector[n_short] log_size_0 = phenos[4,]';
+  vector[n_short] log_size_0 = phenos[2,]';
   vector[n_short] z_rgr = Z[1,]';
  // likelihood for survival
   vector[n_short] logit_p = alpha_survive + beta_rgr_survive * z_rgr +
@@ -59,17 +59,14 @@ model{
   beta ~ normal(0, 1); // ~ -2 <-> 2
   gamma ~ normal(0, 1); // ~ -2 <-> 2
   rgr_bar ~ normal(0, 1); // ~ .03 <-> 2.2
-  age_bar ~ normal(14, 4); // ~ 5 <-> 13.9
-  seed_bar ~ normal(0, 1); // ~ .03 <-> 2.2
+  // age_bar ~ normal(14, 4); // ~ 5 <-> 13.9
+  // seed_bar ~ normal(0, 1); // ~ .03 <-> 2.2
   sig_m ~ exponential(1); // ~ .025 <-> 3.7
   alpha_survive ~ normal(0, 1); // ~ -2 <-> 2 
   beta_rgr_survive ~ normal(0, 1); // ~ -2 <-> 2
   beta_size_survive ~ normal(0, 1); // ~ -2 <-> 2
   L_R ~ lkj_corr_cholesky(2);
   
-  
-  age_max ~ normal(phenos[2,]', tau[2]);
-  seed ~ normal(phenos[3,]', tau[3]);
   //R ~ lkj_corr(2); // weakly regularizing with correlations ~ -.7 <-> .7 
   
   // array[n_short] vector[4] phenos;
@@ -129,5 +126,4 @@ generated quantities{
 
 
   vector[n_pred] rgr_pred = rgr_bar + z_tilde * tau[1];
-  corr_matrix[4] R = multiply_lower_tri_self_transpose(L_R);
 }

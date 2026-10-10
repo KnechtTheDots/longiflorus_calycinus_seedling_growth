@@ -36,7 +36,7 @@ boot_df_make <- function(f2, f1, lon, cal, trait){
 
 
 traits <- read.csv(snakemake@input[['traits']])
-traits$rgr <- (log(traits$day_17 - log(traits$day_4)))/(17 - 4)
+traits$rgr <- (log(traits$day_17) - log(traits$day_4))/(17 - 4)
 
 # separate into data_frames by line
 

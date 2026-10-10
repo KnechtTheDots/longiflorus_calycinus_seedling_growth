@@ -17,17 +17,17 @@ for(i in 1:5){
   d <- read.csv(snakemake@input[[i]])
   df <- d
   d$delta <- delta(d)
-  
+  is_rgr <- traits[i] == "RGR"
   # write the results of the epistasis test to a csv
   d <- d %>% 
     pivot_longer(1:ncol(d), names_to = "line", values_to = "value") %>% 
     group_by(line) %>% 
-    summarise(quant.025 = round(quantile(value, .025), 2),
-              quant.25 = round(quantile(value, .25), 2),
+    summarise(quant.025 = round(quantile(value, .025), ifelse(is_rgr,3,2)),
+              quant.25 = round(quantile(value, .25), ifelse(is_rgr,3,2)),
               mean = round(mean(value), 2),
-              quant.75 = round(quantile(value, .75), 2),
-              quant.975 = round(quantile(value, .975), 2),
-              prop_less_0 = round(sum(value < 0)/n(), 2)) %>%
+              quant.75 = round(quantile(value, .75), ifelse(is_rgr,3,2)),
+              quant.975 = round(quantile(value, .975), ifelse(is_rgr,3,2)),
+              prop_less_0 = round(sum(value < 0)/n(), ifelse(is_rgr,3,2))) %>%
     mutate(Trait = traits[i])
   
   # write the results of the pairwise differences between lines to a file
@@ -47,12 +47,12 @@ for(i in 1:5){
                             comp == "LON.CAL" ~ "LON-CAL"),
            comp = factor(comp, levels = c("F2-F1","F2-LON","F2-CAL",
                                           "F1-LON","F1-CAL","LON-CAL"))) %>% 
-    summarise(quant.025 = round(quantile(value, .025), 2),
-              quant.25 = round(quantile(value, .25), 2),
-              mean = round(mean(value), 2),
-              quant.75 = round(quantile(value, .75), 2),
-              quant.975 = round(quantile(value, .975), 2),
-              prop_less_0 = round(mean(value < 0), 2)) %>% 
+    summarise(quant.025 = round(quantile(value, .025), ifelse(is_rgr,3,2)),
+              quant.25 = round(quantile(value, .25), ifelse(is_rgr,3,2)),
+              mean = round(mean(value), ifelse(is_rgr,3,2)),
+              quant.75 = round(quantile(value, .75), ifelse(is_rgr,3,2)),
+              quant.975 = round(quantile(value, .975), ifelse(is_rgr,3,2)),
+              prop_less_0 = round(mean(value < 0), ifelse(is_rgr,3,2))) %>% 
     mutate(trait = traits[i]) %>% 
     select(Trait = trait, Comparison = comp, quant.025, quant.25, mean, quant.75, quant.975, prop_less_0)
   
@@ -64,6 +64,7 @@ for(i in 1:5){
     d_diff <- rbind(d_diff,dd)
   }
 }
+
 write.csv(d_traits, snakemake@output[['traits']], row.names = F, quote = F)
 write.csv(d_diff, snakemake@output[['diffs']], row.names = F, quote = F)
 
@@ -157,53 +158,109 @@ for(i in 1:3){
   
   fit <- fits[[i]]
   
-  d <- fit$draws("R", format = "df")$`R[1,2]`
-  e <- fit$draws("R", format = "df")$`R[2,3]`
-  f <- fit$draws("R", format = "df")$`R[1,3]`
-  
   rgr <- fit$draws("rgr", format = "df")[,1:nrow(short)]
   size <- fit$draws("final_rep", format = "df")[,1:nrow(short)]
   age <- dat$age_max
   seed <- dat$seed
   
   w <- fit$draws("w", format = "df")[,1:nrow(short)]
-  sigma_w <- fit$draws("sigma_w", format = "df")$sigma_w
+  sigma_w <- apply(w, 1, sd)
+ 
   
-  r_rgr_size <- r_age_size <- r_seed_size <- r_rgr_surv <- r_size_surv <- c()
-  for(j in 1:nrow(rgr)){
-    r_rgr_size[j] <- cor(as.numeric(rgr[j,]), as.numeric(size[j,]))
-    r_age_size[j] <- cor(age, as.numeric(size[j,]))
-    r_seed_size[j] <- cor(seed, as.numeric(size[j,]))
-    r_rgr_surv[j] <- cor(as.numeric(rgr[j,]), as.integer(w[j,]))
-    r_size_surv[j] <- cor(as.numeric(size[j,]), as.integer(w[j,]))
-  }
+  age <- (age - mean(age))/sd(age)
+  seed <- (seed - mean(seed))/sd(seed)
   
-  cors <- get_cors(r_rgr_size, r_age_size, r_seed_size, d, e, f)
+  
+  # r_rgr_size <- r_age_size <- r_seed_size <- r_rgr_surv <- r_size_surv <- c()
+  # for(j in 1:nrow(rgr)){
+  #   r_rgr_size[j] <- cor(as.numeric(rgr[j,]), as.numeric(size[j,]))
+  #   r_age_size[j] <- cor(age, as.numeric(size[j,]))
+  #   r_seed_size[j] <- cor(seed, as.numeric(size[j,]))
+  #   r_rgr_surv[j] <- cor(as.numeric(rgr[j,]), as.numeric(w[j,]))
+  #   r_size_surv[j] <- cor(as.numeric(size[j,]), as.numeric(w[j,]))
+  # }
+  # 
+  # cors <- get_cors(r_rgr_size, r_age_size, r_seed_size, d, e, f)
   
   if(i==1){
-    cors$g <- r_size_surv
-    cors$h <- 0
-    cors$rgr_total <- cors$a * cors$g
+    # cors$g <- r_size_surv
+    # cors$h <- 0
+    # cors$rgr_total <- cors$a * cors$g
+    
+    a <- b <- c <- h <- g <- c()
+    for(j in 1:nrow(rgr)){
+      std <- as.numeric(size[j,])
+      std <- (std-mean(std))/sd(std)
+      rtd <- as.numeric(rgr[j,])
+      rtd <- (rtd - mean(rtd))/sd(rtd)
+      wtd <- as.numeric(w[j,])
+      wtd <- (wtd - mean(wtd))/sd(wtd)
+      p_s <- as.numeric(coef(lm(std ~ rtd + age + seed)))
+      a[j] <- p_s[2]
+      b[j] <- p_s[3]
+      c[j] <- p_s[4]
+      p_w <- as.numeric(coef(lm(wtd ~ std)))
+      g[j] <- p_w[2]
+      h[j] <- 0
+    }
+    cors <- data.frame(a,b,c,g,h)
   }
   
   if(i==2){
-    cors$g <- 0
-    cors$h <- r_rgr_surv
-    cors$rgr_total <- cors$h
+    # cors$g <- 0
+    # cors$h <- r_rgr_surv
+    # cors$rgr_total <- cors$h
+    
+    a <- b <- c <- h <- g <- c()
+    for(j in 1:nrow(rgr)){
+      std <- as.numeric(size[j,])
+      std <- (std-mean(std))/sd(std)
+      rtd <- as.numeric(rgr[j,])
+      rtd <- (rtd - mean(rtd))/sd(rtd)
+      wtd <- as.numeric(w[j,])
+      wtd <- (wtd - mean(wtd))/sd(wtd)
+      p_s <- as.numeric(coef(lm(std ~ rtd + age + seed)))
+      a[j] <- p_s[2]
+      b[j] <- p_s[3]
+      c[j] <- p_s[4]
+      p_w <- as.numeric(coef(lm(wtd ~ rtd)))
+      g[j] <- 0
+      h[j] <- p_w[2]
+    }
+    
+    cors <- data.frame(a,b,c,g,h)
   }
   
   if(i==3){
-    cors$g <- (r_size_surv - r_rgr_size*r_rgr_surv)/(1 - r_rgr_size^2)
+    # cors$g <- (r_size_surv - r_rgr_size*r_rgr_surv)/(1 - r_rgr_size^2)
+    # 
+    # cors$h <- r_rgr_surv - cors$g*r_rgr_size
+    # 
+    # cors$rgr_total <- cors$h + cors$a * cors$g
     
-    cors$h <- r_rgr_surv - cors$g*r_rgr_size
-    
-    cors$rgr_total <- cors$h + cors$a * cors$g
+    a <- b <- c <- h <- g <- c()
+    for(j in 1:nrow(rgr)){
+      std <- as.numeric(size[j,])
+      std <- (std-mean(std))/sd(std)
+      rtd <- as.numeric(rgr[j,])
+      rtd <- (rtd - mean(rtd))/sd(rtd)
+      wtd <- as.numeric(w[j,])
+      wtd <- (wtd - mean(wtd))/sd(wtd)
+      p_s <- as.numeric(coef(lm(std ~ rtd + age + seed)))
+      a[j] <- p_s[2]
+      b[j] <- p_s[3]
+      c[j] <- p_s[4]
+      p_w <- as.numeric(coef(lm(wtd ~ rtd + std)))
+      g[j] <- p_w[3]
+      h[j] <- p_w[2]
+    }
+    cors <- data.frame(a,b,c,g,h)
   }
   
-  cors$s_rgr <- cors$rgr_total
-  cors$s_age <- (cors$b * cors$g)
-  cors$s_seedsize <- (cors$c * cors$g)
-  cors$s_size <- cors$g
+  cors$s_rgr <- (cors$h + cors$a*cors$g)*sigma_w
+  cors$s_age <- (cors$b * cors$g)*sigma_w
+  cors$s_seedsize <- (cors$c * cors$g)*sigma_w
+  cors$s_size <- cors$g*sigma_w
   
   cors <- cors %>% 
     pivot_longer(1:ncol(cors), names_to = "path", values_to = "value") %>% 

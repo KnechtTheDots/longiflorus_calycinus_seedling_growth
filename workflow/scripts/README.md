@@ -1,5 +1,7 @@
 This directory contains all the scripts necessary for the analysis.  
 
+Input files typically use the format 'snakemake@input[[<input>]]' and output files are: 'snakemake@output[[<output>]]. This is the syntax that is used for the snakemake workflow. If it is unclear from the context what the file is, see the relavant rule in 'workflow/Snakefile'
+
 ## The **stan** sub-directory contains 3 stan programs that fit models relating growth rate, age, and seed size to fitness.  
 
 *stan/drought_survival_rgr.stan* models fitness as a function of growth rate.  
