@@ -289,12 +289,7 @@ print("final plot made")
 
 ggsave(snakemake@output[[1]], final_plot, device = "png", width = 12, height = 8)
 
-#top_grid <- plot_grid(plots[[3]], path_coefs[[3]],
-#                      ncol = 2, labels = c("A", "B"), rel_widths = c(1,1))
-#bottom_grid <- plot_grid(NULL, mods[[3]], NULL, nrow = 1, labels = c(""<"C","", rel_widths = c(.5, 1, .5)))
 
-#combined_model_plot <- plot_grid(top_grid, bottom_grid,
-#                                nrow = 2, align = "hv")
 combined_model_plot <- plot_grid(plots[[3]], mods[[3]], path_coefs[[3]], ncol = 3, labels = "AUTO")
 
 ggsave(snakemake@output[[2]], combined_model_plot, device = "png", width = 18, height = 6)

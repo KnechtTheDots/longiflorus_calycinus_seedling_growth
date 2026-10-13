@@ -249,11 +249,7 @@ diff_d17 <- mean_diffs(day_17, "Size on Day 17")
 diff_rgr <- mean_diffs(rgr, "RGR")
 diff_height <- mean_diffs(height, "Height on Day 122")
 
-#top_row <- plot_grid(diff_surv, diff_d4, diff_d17,
-#                     labels = c("A", "B", "C"), ncol = 3)
-#bottom_row <- plot_grid(diff_rgr, diff_height, labels = c("D", "E"), ncol = 2)
 
-#grid <- plot_grid(top_row, bottom_row, ncol = 1)
 
 grid <- plot_grid(diff_surv, diff_d4, diff_d17, diff_rgr, diff_height, labels = "AUTO", ncol = 3)
 
