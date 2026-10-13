@@ -19,3 +19,4 @@ Input files typically use the format 'snakemake@input[[<input>]]' and output fil
 *mod_compare.R* does model comparison of the fitted models  
 *survival_plots.R* creates plots to show the results of the stan models  
 *get_posteriors.R* creates csv's describing the posteriors for all the quantities of interest
+*csv2table.R* takes the data csv's and returns csv's that are formatted to be made into tables in latex

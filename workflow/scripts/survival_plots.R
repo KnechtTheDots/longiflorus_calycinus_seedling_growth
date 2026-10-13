@@ -20,7 +20,7 @@ get_cors <- function(r_rgr_size, r_age_size, r_seed_size, d, e, f){
 }
 
 
-
+# function for getting quantiles
 get_quant <- function(x, quant){
   as.numeric(apply(x, 2, function(z) quantile(z, quant)))
 }
@@ -29,7 +29,8 @@ get_quant <- function(x, quant){
 short <- read.csv(snakemake@input[['short']])
 long <- read.csv(snakemake@input[['long']])
 
-
+# make a list of relevant data for getting the posteriors and 
+# doing the posterior predictive
 dat <- list(
   n_long = nrow(long),
   n_short = nrow(short),
@@ -45,6 +46,7 @@ dat <- list(
   z_tilde = seq(-4,1.5, l = 100)
 )
 
+# make the plots
 plots <- path_coefs <- list()
 for(i in 1:3){
   fit <- readRDS(snakemake@input[[i]])
@@ -93,10 +95,6 @@ for(i in 1:3){
   ## plot the correlations
   
   
-  # d <- fit$draws("R", format = "df")$`R[1,2]`
-  # e <- fit$draws("R", format = "df")$`R[2,3]`
-  # f <- fit$draws("R", format = "df")$`R[1,3]`
-  
   rgr <- fit$draws("rgr", format = "df")[,1:nrow(short)]
   sigma_rgr <- apply(rgr, 1, sd)
   size <- fit$draws("final_rep", format = "df")[,1:nrow(short)]
@@ -117,21 +115,8 @@ for(i in 1:3){
   
   
   
-  # r_rgr_size <- r_age_size <- r_seed_size <- r_rgr_surv <- r_size_surv <- c()
-  # for(j in 1:nrow(rgr)){
-  #   r_rgr_size[j] <- cor(as.numeric(rgr[j,]), as.numeric(size[j,]))
-  #   r_age_size[j] <- cor(age, as.numeric(size[j,]))
-  #   r_seed_size[j] <- cor(seed, as.numeric(size[j,]))
-  #   r_rgr_surv[j] <- cor(as.numeric(rgr[j,]), as.numeric(w[j,]))
-  #   r_size_surv[j] <- cor(as.numeric(size[j,]), as.numeric(w[j,]))
-  # }
-  # 
-  # cors <- get_cors(r_rgr_size, r_age_size, r_seed_size, d, e, f)
-  
   if(i==1){
-    # cors$g <- r_size_surv
-    # cors$h <- 0
-    # cors$rgr_total <- cors$a * cors$g
+    
     
     a <- b <- c <- h <- g <- c()
     for(j in 1:nrow(rgr)){
@@ -153,9 +138,7 @@ for(i in 1:3){
   }
   
   if(i==2){
-    # cors$g <- 0
-    # cors$h <- r_rgr_surv
-    # cors$rgr_total <- cors$h
+    
     
     a <- b <- c <- h <- g <- c()
     for(j in 1:nrow(rgr)){
@@ -178,11 +161,7 @@ for(i in 1:3){
   }
   
   if(i==3){
-    # cors$g <- (r_size_surv - r_rgr_size*r_rgr_surv)/(1 - r_rgr_size^2)
-    # 
-    # cors$h <- r_rgr_surv - cors$g*r_rgr_size
-    # 
-    # cors$rgr_total <- cors$h + cors$a * cors$g
+    
     
     a <- b <- c <- h <- g <- c()
     for(j in 1:nrow(rgr)){
@@ -310,13 +289,13 @@ print("final plot made")
 
 ggsave(snakemake@output[[1]], final_plot, device = "png", width = 12, height = 8)
 
-top_grid <- plot_grid(plots[[3]], path_coefs[[3]],
-                      ncol = 2, labels = c("A", "B"), rel_widths = c(1,1))
-bottom_grid <- plot_grid(NULL, mods[[3]], NULL, nrow = 1, labels = c(""<"C","", rel_widths = c(.5, 1, .5)))
+#top_grid <- plot_grid(plots[[3]], path_coefs[[3]],
+#                      ncol = 2, labels = c("A", "B"), rel_widths = c(1,1))
+#bottom_grid <- plot_grid(NULL, mods[[3]], NULL, nrow = 1, labels = c(""<"C","", rel_widths = c(.5, 1, .5)))
 
-combined_model_plot <- plot_grid(top_grid, bottom_grid,
-                                 nrow = 2, align = "hv")
-#combined_model_plot <- plot_grid(plots[[3]], mods[[3]], path_coefs[[3]], ncol = 3, labels = "AUTO")
+#combined_model_plot <- plot_grid(top_grid, bottom_grid,
+#                                nrow = 2, align = "hv")
+combined_model_plot <- plot_grid(plots[[3]], mods[[3]], path_coefs[[3]], ncol = 3, labels = "AUTO")
 
 ggsave(snakemake@output[[2]], combined_model_plot, device = "png", width = 18, height = 6)
 
