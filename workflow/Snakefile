@@ -3,15 +3,15 @@
 # for them and executes the workflow
 rule target:
     input:
-        panel="results/plots/survival_mod_panel.png",
-        epi="results/plots/epi.png",
-        obs="results/plots/obs.png",
-        mean_diffs="results/plots/mean_diffs.png",
+        panel="results/plots/survival_mod_panel.jpg",
+        epi="results/plots/epi.jpg",
+        obs="results/plots/obs.jpg",
+        mean_diffs="results/plots/mean_diffs.jpg",
         traits="report/posteriors/traits.csv",
         betas="report/posteriors/betas.csv",
         diffs="report/posteriors/diffs.csv",
         corrs="report/posteriors/corrs.csv",
-        ppc="results/plots/ppc.png"
+        ppc="results/plots/ppc.jpg"
 
 # this rule takes the files from data collectio and creates the set 
 # of files that will be used for the analysis
@@ -84,7 +84,7 @@ rule post_pred_checks:
         fit="results/drought_survival_rgr_size.RDS",
         short="results/wrangled/drought_short.csv"
     output:
-        "results/plots/ppc.png"
+        "results/plots/ppc.jpg"
     log:
         log="results/logs/post_pred_checks.log"
     conda:
@@ -102,8 +102,8 @@ rule survival_plots:
         short="results/wrangled/drought_short.csv",
         long="results/wrangled/drought_long.csv"
     output:
-        panel="results/plots/survival_mod_panel.png",
-        comb_only="results/plots/survival_combined_mod.png"
+        panel="results/plots/survival_mod_panel.jpg",
+        comb_only="results/plots/survival_combined_mod.jpg"
     log:
         log="results/logs/survival_plots.log"
     conda:
@@ -140,9 +140,9 @@ rule epi_plots:
         height="results/trait_boots/height.csv",
         traits="results/wrangled/traits.csv"
     output:
-        epi="results/plots/epi.png",
-        obs="results/plots/obs.png",
-        mean_diffs="results/plots/mean_diffs.png"
+        epi="results/plots/epi.jpg",
+        obs="results/plots/obs.jpg",
+        mean_diffs="results/plots/mean_diffs.jpg"
     log:
         log="results/logs/epi_plots.log"
     conda:

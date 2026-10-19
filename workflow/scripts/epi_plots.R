@@ -102,7 +102,7 @@ delta_f2 <- data.frame(Survive = delta(surv$f2, surv$f1, surv$lon, surv$cal)/sur
 
 grid <- plot_grid(p_surv, p_d4, p_d17, p_rgr, p_height, delta_f2, ncol = 3, labels = "AUTO")
 
-ggsave(snakemake@output[['epi']], grid, device = "png", width = 12, height = 8)
+ggsave(snakemake@output[['epi']], grid, device = "jpg", width = 12, height = 8)
 
 
 this_theme <- theme(axis.title = element_text(size = 13, face = "bold"),
@@ -198,7 +198,7 @@ dheight <- d %>%
 
 
 grid <- plot_grid(d4, d17, drgr, dheight, ncol = 2, labels = "AUTO")
-ggsave(snakemake@output[['obs']], grid, device = "png", width = 12, height = 8)
+ggsave(snakemake@output[['obs']], grid, device = "jpg", width = 12, height = 8)
 
 
 this_theme <- theme(axis.title = element_text(size = 12, face = "bold"),
@@ -251,9 +251,22 @@ diff_height <- mean_diffs(height, "Height on Day 122")
 
 
 
-grid <- plot_grid(diff_surv, diff_d4, diff_d17, diff_rgr, diff_height, labels = "AUTO", ncol = 3)
+#grid <- plot_grid(diff_surv, diff_d4, diff_d17, diff_rgr, diff_height, labels = "AUTO", ncol = 3)
 
-ggsave(snakemake@output[['mean_diffs']], grid, device = "png", width = 12, height = 8)
+row1 <- plot_grid(diff_surv, diff_d4, diff_d17, ncol = 3, labels = c("A", "B", "C"))
+
+blank <- ggdraw() + theme_void()
+
+row2 <- plot_grid(blank, diff_rgr, diff_height, blank, ncol = 4, rel_widths = c(1,2,2,1), labels = c("", "D", "E", ""))
+
+grid <- plot_grid(row1, row2, ncol = 1)
+
+# with the jpg file type the background renders to black, so need to make it white
+
+final <- ggdraw(grid) +
+  theme(plot.background = element_rect(fill = "white", color = NA))
+
+ggsave(snakemake@output[['mean_diffs']], final, device = "jpg", width = 12, height = 8)
 
 
 

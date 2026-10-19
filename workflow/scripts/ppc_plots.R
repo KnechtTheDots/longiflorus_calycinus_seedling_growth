@@ -53,15 +53,15 @@ y_rep <- fit$draws("y_rep", format = "matrix")
 samps <- sample(1:nrow(y_rep), 100)
 
 # plot density of the predictions vs the actual
-dens_plot <- ppc_dens_overlay(y, yrep = y_rep[samps,])
+dens_plot <- ppc_dens_overlay(y, yrep = y_rep[samps,]) + theme(axis.line.y = element_blank())
 # plot histogram of standard deviation of posterior predictions vs observed
-sd_hist <- ppc_stat(y, yrep = y_rep, stat = "sd")
+sd_hist <- ppc_stat(y, yrep = y_rep, stat = "sd") + theme(axis.line.y = element_blank())
 # plot histogram of mean of posterior predictions vs observed
-mu_hist <- ppc_stat(y, yrep = y_rep, stat = "mean")
+mu_hist <- ppc_stat(y, yrep = y_rep, stat = "mean") + theme(axis.line.y = element_blank())
 # plot histogram of minimum of posterior predictions vs observed
-min_hist <- ppc_stat(y, yrep = y_rep, stat = "min")
+min_hist <- ppc_stat(y, yrep = y_rep, stat = "min") + theme(axis.line.y = element_blank())
 # plot histogram of maximum of posterior predictions vs observed
-max_hist <- ppc_stat(y, yrep = y_rep, stat = "max")
+max_hist <- ppc_stat(y, yrep = y_rep, stat = "max") + theme(axis.line.y = element_blank())
 
 # read in the summary of fit to gett effective sample sizes and rhat
 d <- fit$summary()
@@ -88,11 +88,25 @@ rhat_tail <- d %>%
   geom_hline(yintercept = 1.01, color = "red") +
   geom_vline(xintercept = 400, color = "red")
 
-grid <- plot_grid(obs_v_pred, dens_plot, mu_hist, sd_hist,
-          min_hist, max_hist, rhat_bulk, rhat_tail,
-          ncol = 4, labels = "AUTO")
+#grid <- plot_grid(obs_v_pred, dens_plot, mu_hist, sd_hist,
+#          min_hist, max_hist, rhat_bulk, rhat_tail,
+#          ncol = 4, labels = "AUTO")
 
-ggsave(snakemake@output[[1]], grid, device = "png", width = 12, height = 8)
+row1 <- plot_grid(dens_plot, mu_hist, sd_hist,
+                  min_hist, max_hist, rhat_bulk,
+                  ncol = 3, labels = "AUTO")
+
+blank <- ggdraw() + theme_void()
+
+row2 <- plot_grid(blank, rhat_tail, blank, ncol = 3, labels = c("", "G", ""),
+                  rel_widths = c(1,1,1))
+
+grid <- plot_grid(row1, row2, ncol = 1, rel_heights = c(2,1))
+
+final <- ggdraw(grid) +
+  theme(plot.background = element_rect(fill = "white", color = NA))
+
+ggsave(snakemake@output[[1]], final, device = "jpg", width = 12, height = 8)
 
 
 on.exit(sink())

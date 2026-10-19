@@ -230,7 +230,7 @@ for(i in 1:3){
   
   paths <- data.frame(variables = letters[1:8],
                       x = c(-.5, .05, .5, -.5, .5, 0, .05, -.5),
-                      y = c(-.55, -.55, -.55, -1.1, -1.1, -1.27, .3, .3))
+                      y = c(-.55, -.55, -.55, -1.1, -1.1, -1.4, .3, .3))
   
   if(i==1){
     to_survive <- to_survive[2,]
@@ -278,7 +278,7 @@ for(i in 1:3){
 
 print("Path plots made")
 
-ggsave("results/plots/path_model.png", mods[[3]], device = "png", width = 12, height = 8)
+ggsave("results/plots/path_model.jpg", mods[[3]], device = "jpg", width = 12, height = 8)
 
 # plot size, rgr, size-rgr
 final_plot <- plot_grid(plots[[1]], plots[[2]], plots[[3]], 
@@ -287,12 +287,14 @@ final_plot <- plot_grid(plots[[1]], plots[[2]], plots[[3]],
 
 print("final plot made")
 
-ggsave(snakemake@output[[1]], final_plot, device = "png", width = 12, height = 8)
+ggsave(snakemake@output[[1]], final_plot, device = "jpg", width = 12, height = 8)
 
 
-combined_model_plot <- plot_grid(plots[[3]], mods[[3]], path_coefs[[3]], ncol = 3, labels = "AUTO")
+#combined_model_plot <- plot_grid(plots[[3]], mods[[3]], path_coefs[[3]], ncol = 3, labels = "AUTO")
 
-ggsave(snakemake@output[[2]], combined_model_plot, device = "png", width = 18, height = 6)
+combined_model_plot <- plot_grid(plots[[3]], path_coefs[[3]], ncol = 2, labels = "AUTO")
+
+ggsave(snakemake@output[[2]], combined_model_plot, device = "jpg", width = 12, height = 6)
 
 
 print("All plots made")
